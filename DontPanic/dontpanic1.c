@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 05:50:07 by flcarval          #+#    #+#             */
-/*   Updated: 2022/03/17 05:50:09 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/03/18 05:10:21 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,6 @@ typedef struct	s_clone{
 	char	*direction;
 }	t_clone;
 
-typedef struct	s_exit{
-	int	floor;
-	int	pos;
-}	t_exit;
-
 typedef struct s_elevator{
 	int	floor;
 	int	pos;
@@ -39,8 +34,9 @@ typedef struct	s_place{
 static void			WAIT(void);
 static void			BLOCK(void);
 static int			go_to_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators);
-static t_elevator	*which_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators);
-static int			is_good_direction(t_clone clone, t_elevator *target);
+static t_place		which_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators);
+static int			is_good_direction(t_clone clone, t_place target);
+static void			_exit_floor(t_clone clone, t_place exit);
 
 int main()
 {
@@ -62,7 +58,7 @@ int main()
     int nb_elevators;
     scanf("%d%d%d%d%d%d%d%d", &nb_floors, &width, &nb_rounds, &exit_floor, &exit_pos, &nb_total_clones, &nb_additional_elevators, &nb_elevators);
 
-	t_exit	exit;
+	t_place	exit;
 	exit.floor = exit_floor;
 	exit.pos = exit_pos;
 
@@ -86,7 +82,6 @@ int main()
 	int	round = 0;
     while (1) {
 		round++;
-		t_place	start;
         // floor of the leading clone
         int clone_floor;
         // position of the leading clone on its floor
@@ -98,12 +93,9 @@ int main()
 		clone.pos = clone_pos;
 		clone.direction = &direction[0];
 		if (round == 1)
-		{
-			start.floor = clone.floor;
-			start.pos = clone.pos;
-		}
-		if (clone.floor == start.floor && clone.pos == start.pos)
 			WAIT();
+		else if (clone.floor == exit.floor)
+			_exit_floor(clone, exit);
 		else if (go_to_elevator(clone, Elevators, nb_elevators))
 			WAIT();
 		else
@@ -115,7 +107,7 @@ int main()
 
 static int	go_to_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators)
 {
-	t_elevator	*target;
+	t_place	target;
 	static int	state = 0;
 
 	target = which_elevator(clone, Elevators, nb_elevators);
@@ -124,29 +116,34 @@ static int	go_to_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators
 	return (0);
 }
 
-static t_elevator	*which_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators)
+static t_place	which_elevator(t_clone clone, t_elevator *Elevators, int nb_elevators)
 {
+	t_place	res;
 	int	i;
 
 	i = 0;
 	while (i < nb_elevators)
 	{
-		if (&Elevators[i].floor == clone.floor)
-			return (&Elevators[i]);
+		if (Elevators[i].floor == clone.floor)
+		{
+			res.floor = Elevators[i].floor;
+			res.pos = Elevators[i].pos;
+		}
 		i++;
 	}
+	return (res);
 }
 
-static int	is_good_direction(t_clone clone, t_elevator *target)
+static int	is_good_direction(t_clone clone, t_place target)
 {
-	if (clone.pos > target->pos)
+	if (clone.pos > target.pos)
 	{
 		if (clone.direction[0] == 'L')
 			return (1);
 		else
 			return (0);
 	}
-	else if (clone.pos < target->pos)
+	else if (clone.pos < target.pos)
 	{
 		if (clone.direction[0] == 'R')
 			return (1);
@@ -155,6 +152,14 @@ static int	is_good_direction(t_clone clone, t_elevator *target)
 	}
 	else
 		return (-1);
+}
+
+static void	_exit_floor(t_clone clone, t_place exit)
+{
+	if (is_good_direction(clone, exit))
+		WAIT();
+	else
+		BLOCK();
 }
 
 static void	WAIT(void)
