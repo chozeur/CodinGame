@@ -28,34 +28,19 @@ int main()
         int opponent_y;
         scanf("%d%d", &opponent_x, &opponent_y);
         int power=100;
-        
-        if(next_checkpoint_dist<=3500){
-            power=90;
-        }
-        
-        else if(next_checkpoint_dist<=2700){
-            power=75;
-        }
 
-        else if(next_checkpoint_dist<=2000){
-            power=100;
-        }
-
-        else if(next_checkpoint_dist<=1000){
-            power=0;
-        }
-
-        else if(next_checkpoint_dist<=500){
-            power=80;
-        }
-
-        if(next_checkpoint_angle>85 && next_checkpoint_angle<95){
-            power=0;
-        }
-
-
-
-
+        if(next_checkpoint_dist < 3500)
+            power = 100;
+        else if(next_checkpoint_dist < 2700)
+            power = 100;
+        else if(next_checkpoint_dist < 2000)
+            power = 42;
+        else if(next_checkpoint_dist < 1000)
+            power = 0;
+        else if(next_checkpoint_dist < 500)
+            power = 21;
+        if(next_checkpoint_angle > 85 && next_checkpoint_angle < 95)
+            power = 0;
         printf("%d %d %d\n", next_checkpoint_x, next_checkpoint_y,power);
     }
 
