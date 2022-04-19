@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/19 03:42:27 by flcarval          #+#    #+#             */
-/*   Updated: 2022/04/19 04:23:59 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/04/19 04:27:25 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,11 +62,11 @@ int main()
 
 static void	loop_get_humans(int human_count, t_data *data)
 {
+	int	human_id;
+	int	human_x;
+	int	human_y;
 
 	for (int i = 0; i < human_count; i++) {
-		int	human_id;
-		int	human_x;
-		int	human_y;
 		scanf("%d%d%d", &human_id, &human_x, &human_y);
 		data->Humans[i].id = human_id;
 		data->Humans[i].x = human_x;
@@ -76,13 +76,13 @@ static void	loop_get_humans(int human_count, t_data *data)
 
 static void	loop_get_zombies(int zombie_count, t_data *data)
 {
+	int	zombie_id;
+	int	zombie_x;
+	int	zombie_y;
+	int	zombie_xnext;
+	int	zombie_ynext;
 
 	for (int i = 0; i < zombie_count; i++) {
-		int	zombie_id;
-		int	zombie_x;
-		int	zombie_y;
-		int	zombie_xnext;
-		int	zombie_ynext;
 		scanf("%d%d%d%d%d", &zombie_id, &zombie_x, &zombie_y, &zombie_xnext, &zombie_ynext);
 		data->Zombies[i].id = zombie_id;
 		data->Zombies[i].x = zombie_x;
