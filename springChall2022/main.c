@@ -6,14 +6,14 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/23 00:39:09 by flcarval          #+#    #+#             */
-/*   Updated: 2022/04/23 00:39:15 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/04/26 02:45:15 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // In the first league: MOVE <x> <y> | WAIT; \
 In later leagues: | SPELL <spellParams>;
 // Write an action using printf(). DON'T FORGET THE TRAILING \n
-// To debug: fprintf(stderr, "Debug messages...\n");
+// To debug: //fprintf(stderr, "Debug messages...\n");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -78,7 +78,7 @@ int			move(t_data *data, int hero);
 t_vector	pid_to_pos(t_data *data, int eid);
 double		distance(t_vector a, t_vector b);
 t_vector	*is_spider_close(t_data *data, t_vector pos);
-
+void		print_hero(t_entity hero);
 
 int main()
 {
@@ -93,6 +93,7 @@ int main()
 	scanf("%d", &heroes_per_player);
 	data.round = 0;
 	while (1) {
+		//fprintf(stderr, "infinite\n");
 		i = 0;
 		while (i < 2) {
 			scanf("%d%d", &(data.health), &mana);
@@ -105,6 +106,7 @@ int main()
 		i = 0;
 		while (i < data.entity_count)
 		{
+			//fprintf(stderr, "\tentity gathering\n");
 			scanf("%d%d%d%d%d%d%d%d%d%d%d", &(data.Entities[i].id), &(data.Entities[i].type), \
 				&(data.Entities[i].position.x), &(data.Entities[i].position.y), \
 				&(data.Entities[i].shield_life), &(data.Entities[i].is_controlled), \
@@ -117,12 +119,19 @@ int main()
 		set_entity(&data, OPPONENT);
 		set_entity(&data, MONSTER);
 		i = 0;
+		//fprintf(stderr, "hpp = %d\n", heroes_per_player);
 		while (i < heroes_per_player)
-			move(&data, i++);
+		{
+			//fprintf(stderr, "\tmove #%d\n", i);
+			move(&data, i);
+			i++;
+			//fprintf(stderr, "moved\n");
+		}
 		free(data.Entities);
 		free_entity(&data, HERO);
 		free_entity(&data, OPPONENT);
 		free_entity(&data, MONSTER);
+		data.round++;
 	}
 	return 0;
 }
@@ -136,10 +145,13 @@ int count_entity(t_data *data, int entity)
 	res = 0;
 	while (i < data->entity_count)
 	{
+		fprintf(stderr, "//count entity #%d\n", entity);
 		if (data->Entities[i].type == entity)
 			res++;
 		i++;
 	}
+	//fprintf(stderr, "//1 HERO\n2 OPPONENT\n0 MONSTER\n");
+	//fprintf(stderr, "//entities %d : %d\n----------------------------------------------\n", entity, res);
 	return (res);
 }
 
@@ -190,6 +202,7 @@ void	set_entity(t_data *data, int entity)
 	j = 0;
 	while (i < count_entity(data, entity))
 	{
+		//fprintf(stderr, "//set entity #%d", entity);
 		if (data->Entities[i].type == entity)
 		{
 			if (entity == HERO)
@@ -231,28 +244,38 @@ int	 move(t_data *data, int i_Heroes)
 	t_entity	*hero;
 	t_vector	direction;
 
+	fprintf(stderr, "in [move]\n");
 	hero = &(data->Heroes[i_Heroes]);
+	print_hero(*hero);
 	if (distance(data->base, hero->position) >= 42000)
 	{
+		fprintf(stderr, "\t[move] first if()\n");
 		direction.x = 0;
 		direction.y = 0;
 	}
 	else if (!is_spider_close(data, hero->position))
 	{
+		fprintf(stderr, "\t[move] second if()\n");
 		direction.x = hero->defense_position.x;
 		direction.y = hero->defense_position.y;
 	}
+	// ? could try puting this one in #1
 	else if (is_spider_close(data, hero->position))
 	{
+		fprintf(stderr, "\t[move] third if()\n");
 		direction = *(is_spider_close(data, hero->position));
 	}
+	fprintf(stderr, "//MOVE %d %d\n", direction.x, direction.y);
 	printf("MOVE %d %d\n", direction.x, direction.y);
+	return (0);
 }
 
 double	distance(t_vector a, t_vector b)
 {
-	return (sqrt(((atof(b.x) - atof(a.x)) * (atof(b.x) - atof(a.x))) + \
-		((atof(b.y) - atof(a.y)) * (atof(b.y) - atof(a.y)))));
+	fprintf(stderr, "in [distance]\n");
+	fprintf(stderr, "distance %d/%d - %d/%d = %f\n", a.x, a.y, b.x, b.y, \
+		sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2) * 1.0));
+	return (sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2) * 1.0));
 }
 
 t_vector	pid_to_pos(t_data *data, int eid)
@@ -261,7 +284,10 @@ t_vector	pid_to_pos(t_data *data, int eid)
 
 	i = 0;
 	while (data->Entities[i].id != eid)
+	{
+		//fprintf(stderr, "//way to pid_to_pos\n");
 		i++;
+	}
 	return (data->Entities[i].position);
 }
 
@@ -270,11 +296,13 @@ t_vector	*is_spider_close(t_data *data, t_vector pos)
 	t_vector	*res;
 	int			i;
 
+	fprintf(stderr, "in [is_spider_close]\n");
 	res->x = 17630;
 	res->y = 90000;
 	i = 0;
 	while (i < count_entity(data, MONSTER))
 	{
+		fprintf(stderr, "//check is_spider_close\n");
 		if (distance(pos, data->Monsters[i].position) <= 2400 \
 			&& distance(pos, data->Monsters[i].position) < \
 			distance(*res, data->Monsters[i].position))
@@ -284,4 +312,10 @@ t_vector	*is_spider_close(t_data *data, t_vector pos)
 	if (res->x != 17630 && res->y != 90000)
 		return (res);
 	return (NULL);
+}
+
+void	print_hero(t_entity hero)
+{
+	fprintf(stderr, "in [print_hero]\n");
+	fprintf(stderr, "--__--__--__--\nid : %d\nhealth : %d\nposition : %d/%d\ndefense position : %d/%d\n",hero.id, hero.health, hero.position.x, hero.position.y, hero.defense_position.x, hero.defense_position.y);
 }

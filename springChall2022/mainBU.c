@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   mainBU.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/22 00:45:56 by flcarval          #+#    #+#             */
-/*   Updated: 2022/04/22 02:08:34 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/04/26 02:45:15 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 // In the first league: MOVE <x> <y> | WAIT; \
 In later leagues: | SPELL <spellParams>;
 // Write an action using printf(). DON'T FORGET THE TRAILING \n
-// To debug: fprintf(stderr, "Debug messages...\n");
+// To debug: //fprintf(stderr, "Debug messages...\n");
 
 #include <stdlib.h>
 #include <stdio.h>
