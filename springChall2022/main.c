@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/23 00:39:09 by flcarval          #+#    #+#             */
-/*   Updated: 2022/04/26 02:45:15 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/04/30 05:43:43 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int			free_entity(t_data *data, int entity);
 int			move(t_data *data, int hero);
 t_vector	pid_to_pos(t_data *data, int eid);
 double		distance(t_vector a, t_vector b);
-t_vector	*is_spider_close(t_data *data, t_vector pos);
+t_vector	is_spider_close(t_data *data, t_vector pos);
 void		print_hero(t_entity hero);
 
 int main()
@@ -124,14 +124,15 @@ int main()
 		{
 			//fprintf(stderr, "\tmove #%d\n", i);
 			move(&data, i);
+			printf("MOVE %d %d\n", data.Heroes[i].direction.x, data.Heroes[i].direction.y);
 			i++;
+			data.round++;
 			//fprintf(stderr, "moved\n");
 		}
 		free(data.Entities);
 		free_entity(&data, HERO);
 		free_entity(&data, OPPONENT);
 		free_entity(&data, MONSTER);
-		data.round++;
 	}
 	return 0;
 }
@@ -145,7 +146,7 @@ int count_entity(t_data *data, int entity)
 	res = 0;
 	while (i < data->entity_count)
 	{
-		fprintf(stderr, "//count entity #%d\n", entity);
+		// //fprintf(stderr, "//count entity #%d\n", entity);
 		if (data->Entities[i].type == entity)
 			res++;
 		i++;
@@ -224,8 +225,8 @@ void	set_defense_position(t_data *data, int Heroes_i)
 {
 	if (Heroes_i == 0)
 	{
-		data->Heroes[Heroes_i].defense_position.x = 14000;
-		data->Heroes[Heroes_i].defense_position.y = 5000;
+		data->Heroes[Heroes_i].defense_position.x = 1400;
+		data->Heroes[Heroes_i].defense_position.y = 4800;
 	}
 	if (Heroes_i == 1)
 	{
@@ -242,38 +243,35 @@ void	set_defense_position(t_data *data, int Heroes_i)
 int	 move(t_data *data, int i_Heroes)
 {
 	t_entity	*hero;
-	t_vector	direction;
 
-	fprintf(stderr, "in [move]\n");
-	hero = &(data->Heroes[i_Heroes]);
+	//fprintf(stderr, "in [move]\n");
+	hero = &data->Heroes[i_Heroes];
 	print_hero(*hero);
-	if (distance(data->base, hero->position) >= 42000)
+	if (data->round < 15)
 	{
-		fprintf(stderr, "\t[move] first if()\n");
-		direction.x = 0;
-		direction.y = 0;
+		//fprintf(stderr, "\t[move] second if()\n");
+		data->Heroes[i_Heroes].direction.x = hero->defense_position.x;
+		data->Heroes[i_Heroes].direction.y = hero->defense_position.y;
 	}
-	else if (!is_spider_close(data, hero->position))
-	{
-		fprintf(stderr, "\t[move] second if()\n");
-		direction.x = hero->defense_position.x;
-		direction.y = hero->defense_position.y;
-	}
-	// ? could try puting this one in #1
-	else if (is_spider_close(data, hero->position))
+	else if (is_spider_close(data, hero->position).x != 18000 && is_spider_close(data, hero->position).y != 8900)
 	{
 		fprintf(stderr, "\t[move] third if()\n");
-		direction = *(is_spider_close(data, hero->position));
+		data->Heroes[i_Heroes].direction = is_spider_close(data, hero->position);
+		fprintf(stderr, "direction.x = %d\ndirection.y = %d\n", data->Heroes[i_Heroes].direction.x, data->Heroes[i_Heroes].direction.y);
 	}
-	fprintf(stderr, "//MOVE %d %d\n", direction.x, direction.y);
-	printf("MOVE %d %d\n", direction.x, direction.y);
+	else if (distance(data->base, hero->position) >= 60000)
+	{
+		//fprintf(stderr, "\t[move] first if()\n");
+		data->Heroes[i_Heroes].direction.x = hero->defense_position.x;
+		data->Heroes[i_Heroes].direction.y = hero->defense_position.y;
+	}
 	return (0);
 }
 
 double	distance(t_vector a, t_vector b)
 {
-	fprintf(stderr, "in [distance]\n");
-	fprintf(stderr, "distance %d/%d - %d/%d = %f\n", a.x, a.y, b.x, b.y, \
+	//fprintf(stderr, "in [distance]\n");
+	//fprintf(stderr, "distance %d/%d - %d/%d = %f\n", a.x, a.y, b.x, b.y, \
 		sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2) * 1.0));
 	return (sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2) * 1.0));
 }
@@ -291,31 +289,32 @@ t_vector	pid_to_pos(t_data *data, int eid)
 	return (data->Entities[i].position);
 }
 
-t_vector	*is_spider_close(t_data *data, t_vector pos)
+t_vector	is_spider_close(t_data *data, t_vector pos)
 {
-	t_vector	*res;
+	t_vector	res;
 	int			i;
 
-	fprintf(stderr, "in [is_spider_close]\n");
-	res->x = 17630;
-	res->y = 90000;
+	//fprintf(stderr, "in [is_spider_close 1]%d\n", count_entity(data, MONSTER));
+	res.x = 18000;
+	res.y = 8900;
 	i = 0;
+	//fprintf(stderr, "in [is_spider_close 1bis]%d\n", i);
 	while (i < count_entity(data, MONSTER))
 	{
-		fprintf(stderr, "//check is_spider_close\n");
-		if (distance(pos, data->Monsters[i].position) <= 2400 \
+		//fprintf(stderr, "//check is_spider_close\n");
+		if (distance(pos, data->Monsters[i].position) <= 8000 \
 			&& distance(pos, data->Monsters[i].position) < \
-			distance(*res, data->Monsters[i].position))
-			*res = data->Monsters[i].position;
+			distance(res, data->Monsters[i].position))
+			res = data->Monsters[i].position;
 		i++;
 	}
-	if (res->x != 17630 && res->y != 90000)
-		return (res);
-	return (NULL);
+	//fprintf(stderr, "in [is_spider_close 2]%d\n", count_entity(data, MONSTER));
+	fprintf(stderr, "spider.x = %d\nspider.y = %d\n", res.x, res.y);
+	return (res);
 }
 
 void	print_hero(t_entity hero)
 {
-	fprintf(stderr, "in [print_hero]\n");
-	fprintf(stderr, "--__--__--__--\nid : %d\nhealth : %d\nposition : %d/%d\ndefense position : %d/%d\n",hero.id, hero.health, hero.position.x, hero.position.y, hero.defense_position.x, hero.defense_position.y);
+	//fprintf(stderr, "in [print_hero]\n");
+	//fprintf(stderr, "--__--__--__--\nid : %d\nhealth : %d\nposition : %d/%d\ndefense position : %d/%d\n",hero.id, hero.health, hero.position.x, hero.position.y, hero.defense_position.x, hero.defense_position.y);
 }
