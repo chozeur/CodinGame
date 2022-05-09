@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   main.c											 :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: flcarval <flcarval@student.42.fr>		  +#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2022/04/19 03:42:27 by flcarval		  #+#	#+#			 */
-/*   Updated: 2022/05/09 02:16:49 by flcarval		 ###   ########.fr	   */
-/*																			*/
+/*																			  */
+/*														:::	  ::::::::        */
+/*   main.c											 :+:	  :+:	:+:       */
+/*													+:+ +:+		 +:+	      */
+/*   By: flcarval <flcarval@student.42.fr>		  +#+  +:+	   +#+		      */
+/*												+#+#+#+#+#+   +#+		      */
+/*   Created: 2022/04/19 03:42:27 by flcarval		  #+#	#+#			      */
+/*   Updated: 2022/05/09 02:16:49 by flcarval		 ###   ########.fr	      */
+/*																			  */
 /* ************************************************************************** */
 
 #include <stdlib.h>
@@ -42,6 +42,7 @@ typedef struct s_data{
 	int			human_count;
 	int			round;
 	t_vector	last_move;
+	t_vector	ash_pos;
 }	t_data;
 
 static void		loop_get_humans(int human_count, t_data *data);
@@ -51,12 +52,11 @@ static int		fear_indice(t_human human, t_zombie *Zombies, int zombie_count);
 static double	distance(t_vector a, t_vector b);
 static void		set_fears(t_human *Humans, t_zombie *Zombies, int human_count, int zombie_count);
 static void		move(t_data *data);
+static t_zombie	*closest(t_vector target, t_zombie *Zombies, int zombie_count);
 
 int main()
 {
 	t_data	data;
-	int	x;
-	int	y;
 
 	data.round = 0;
 	data.last_move.x = 0;
@@ -64,7 +64,7 @@ int main()
 	while (1)
 	{
 		data.round++;
-		scanf("%d%d", &x, &y);
+		scanf("%d%d", &data.ash_pos.x, &data.ash_pos.y);
 		scanf("%d", &data.human_count);
 		loop_get_humans(data.human_count, &data);
 		scanf("%d", &data.zombie_count);
@@ -188,6 +188,9 @@ static void		move(t_data *data)
 	}
 	move = data->Humans[id].pos;
 	fprintf(stderr, "[move] min_fear = %d\n", min_fear);
+	if ((data->ash_pos.x == move.x && data->ash_pos.y == move.y)/* || \
+		(closest(data->ash_pos, data->Zombies, data->zombie_count) == closest(data->Humans[id].pos, data->Zombies, data->zombie_count))*/)
+		move = closest(data->ash_pos, data->Zombies, data->zombie_count)->pos;
 	else if (data->last_move.x && data->last_move.y)
 	{
 		if (keep > 3)
@@ -198,4 +201,21 @@ static void		move(t_data *data)
 	printf("%d %d\n", move.x, move.y);
 	keep++;
 	data->last_move = move;
+}
+
+static t_zombie	*closest(t_vector target, t_zombie *Zombies, int zombie_count)
+{
+	int	i;
+	int	dist;
+	int	id;
+
+	i = 0;
+	dist = 19000;
+	while (i < zombie_count)
+	{
+		if (distance(target, Zombies[i].pos) < dist)
+			id = i;
+		i++;
+	}
+	return (&Zombies[id]);
 }
