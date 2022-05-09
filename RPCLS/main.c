@@ -1,242 +1,137 @@
-/*DEBUG --> fprintf(stderr, "Debug messages...\n") */
-/*HEADER*/
-/*-------------------------------------------------------*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <limits.h>
 
-typedef struct  s_player{
-    int num;
-    char c;
-    int *opponents;
-    struct s_player *next;
-}   t_player;
+typedef struct s_player{
+	int		num;
+	char	sign;
+	int		*opponents;
+}	t_player;
 
-t_player	*ft_lstnew(int num, char c);
-    void	ft_lstadd_back(t_player **alst, t_player *new);
-t_player	*ft_lstlast(t_player *lst);
-    int	    ft_lstsize(t_player *lst);
-t_player    *duel(int round, t_player *play_1, t_player *play_2);
-t_player    *set_op(int round, t_player *win, t_player *lose);
-    void    print_op(t_player *win);
-    void	print_list(t_player **alst);
-t_player    *play_game(t_player **alst_a);
-    void    play_round(int round, t_player **alst_a);
-    void	push(t_player *lst_a, t_player **alst_b);
-/*-------------------------------------------------------*/
-/*MAIN*/
-/*-------------------------------------------------------*/
+typedef struct s_data{
+	t_player	*Players;
+	int			nb_players;
+	int			round;
+}	t_data;
+
+t_player	set_player(int num, char *sign, int players);
+void		play_round(t_data *data);
+t_player	*duel(t_player *a_player, t_player *b_player, int round);
+
 int main()
 {
-    int N;
-    t_player	*lst_a;
-    t_player	**alst_a;
-    t_player    *win;
-
-    lst_a = NULL;
-    alst_a = &lst_a;    
-    scanf("%d", &N);
-    for (int i = 0; i < N; i++) {
-        int NUMPLAYER;
-        char SIGNPLAYER[2];
-        scanf("%d%s", &NUMPLAYER, SIGNPLAYER);
-        lst_a = ft_lstnew(NUMPLAYER, SIGNPLAYER[0]);
-        ft_lstadd_back(alst_a, lst_a);
-    }
-//    print_list(alst_a);
-    win = play_game(alst_a);
-////////////////////////////////////
-    printf("%d\n", win->num);
-    print_op(win);
-////////////////////////////////////
-    return 0;
-}
-/*-------------------------------------------------------*/
-/*FUNCTIONS*/
-/*-------------------------------------------------------*/
-
-t_player    *play_game(t_player **alst_a)
-{
-    int round;
-
-    round = 0;
-    while (ft_lstsize(*alst_a) > 2)
-    {
-        play_round(round, alst_a);
-        round++;
-    }
-    return (duel(round, (*alst_a), (*alst_a)->next));
-}
-
-void    play_round(int round, t_player **alst_a)
-{
-    t_player    *even;
-    t_player    *odd;
-    t_player	*lst_b;
-    t_player	**alst_b;
-    t_player    *tof;
-    t_player    *tmp;
-    
-    lst_b = NULL;
-    alst_b = &lst_b;
-    even = *alst_a;
-    odd = (*alst_a)->next;
-    while (even)
-    {
-        push(duel(round, even, odd), alst_b);
-        even = even->next->next;
-        if (odd->next)
-            odd = odd->next->next;
-    }
-    tof = *alst_a;
-    alst_a = alst_b;
-    while (tof)
-    {
-        tmp = tof->next;
-        free(tof);
-        tof = tmp;
-    }
-}
-
-
-t_player    *duel(int round, t_player *play_1, t_player *play_2)
-{
-    if (play_1->c == 'C')
-    {
-        if (play_2->c == 'P' || play_2->c == 'L')
-            return (set_op(round, play_1, play_2));
-        else
-            return (set_op(round, play_2, play_1));
-    }
-    else if (play_1->c == 'P')
-    {
-        if (play_2->c == 'R' || play_2->c == 'S')
-            return (set_op(round, play_1, play_2));
-        else
-            return (set_op(round, play_2, play_1));
-    }
-    else if (play_1->c == 'R')
-    {
-        if (play_2->c == 'L' || play_2->c == 'C')
-            return (set_op(round, play_1, play_2));
-        else
-            return (set_op(round, play_2, play_1));        
-    }
-    else if (play_1->c == 'L')
-    {
-        if (play_2->c == 'S' || play_2->c == 'P')
-            return (set_op(round, play_1, play_2));
-        else
-            return (set_op(round, play_2, play_1));        
-    }
-    else    // 'S'
-    {
-        if (play_2->c == 'C' || play_2->c == 'R')
-            return (set_op(round, play_1, play_2));
-        else
-            return (set_op(round, play_2, play_1));
-    }
-}
-
-
-
-t_player    *set_op(int round, t_player *win, t_player *lose)
-{
-    win->opponents[round] = lose->num;
-    return (win);
-}
-
-void    print_op(t_player *win)
-{
-    int i;
-
-    i = 0;
-    while (win->opponents[i] != INT_MIN)
-        printf("%d ", win->opponents[i++]);
-}
-
-t_player	*ft_lstnew(int num, char c)
-{
-	t_player	*res;
-
-	res = malloc(sizeof(t_player));
-	if (res == NULL)
-		return (NULL);
-	res->num = num;
-    res->c = c;
-	res->next = NULL;
-    res->opponents = malloc(sizeof(int) * 2048);
-	return (res);
-}
-
-t_player	*ft_lstlast(t_player *lst)
-{
-	if (lst)
-	{
-		while (lst->next)
-		{
-			lst = lst->next;
-		}
-		return (lst);
+	t_data	data;
+	int		N;
+	scanf("%d", &N);
+	t_player	*Players;
+	Players = malloc(sizeof(t_player) * N);
+	for (int i = 0; i < N; i++) {
+		int		num;
+		char	sign[2];
+		scanf("%d%s", &num, sign);
+		Players[i] = set_player(num, sign, N);
 	}
-	return (NULL);
-}
-
-void	ft_lstadd_back(t_player **alst, t_player *new)
-{
-	t_player	*last;
-
-	if (alst)
+	data.nb_players = N;
+	data.Players = Players;
+	data.round = 0;
+	while (data.nb_players > 1)
 	{
-		if (*alst == NULL)
-			*alst = new;
+		fprintf(stderr, "play round %d\n", data.round);
+		play_round(&data);
+		fprintf(stderr, "played round %d\n", data.round);
+		data.round++;
+	}
+	printf("%d\n", data.Players[0].num);
+	for (int i = 0; data.Players[0].opponents[i]; i++) {
+		printf("%d\n", data.Players[0].opponents[i]);
+		if (data.Players[0].opponents[i + 1])
+			printf(" ");
 		else
-		{
-			last = ft_lstlast(*alst);
-			last->next = new;
-		}
+			printf("\n");
 	}
+	return 0;
 }
 
-int	ft_lstsize(t_player *lst)
+t_player	set_player(int num, char *sign, int players)
 {
-	t_player	*count;
+	t_player	player;
 	int			i;
 
-	count = lst;
+	player.num = num;
+	player.sign = sign[0];
+	player.opponents = malloc(sizeof(int) * players);
 	i = 0;
-	while (count != NULL)
+	while (i < players)
 	{
-        fprintf(stderr, "here\n");
-		count = count->next;
+		player.opponents[i] = 0;
 		i++;
 	}
-	return (i);
 }
 
-void	print_list(t_player **alst)
+void		play_round(t_data *data)
 {
-	t_player	*player;
+	t_player	*Winners;
+	int			i, j;
 
-	if (!(*alst) || !alst)
-		return ;
-	player = *alst;
-	while (player)
+	Winners = malloc(sizeof(t_player) * (data->nb_players / 2));
+	i = 0;
+	j = 0;
+	while (i < data->nb_players)
 	{
-        fprintf(stderr, "player %d\n", player->num);
-		player = player->next;
+		Winners[j] = *duel(&data->Players[i], &data->Players[i + 1], data->round);
+		j++;
+		i += 2;
 	}
+	data->nb_players /= 2;
+	free(data->Players);
+	data->Players = Winners;
 }
 
-void	push(t_player *lst_a, t_player **alst_b)
+t_player	*duel(t_player *a_player, t_player *b_player, int round)
 {
-    t_player    *new;
+	t_player	*win;
 
-    new = ft_lstnew(lst_a->num, lst_a->c);
-    new->opponents = lst_a->opponents;
-    ft_lstadd_back(alst_b, new);
+	if (a_player->sign == 'C')
+	{
+		if (b_player->sign == 'P' || b_player->sign == 'L')
+			win = a_player;
+		else
+			win = b_player;
+	}
+	else if (a_player->sign == 'P')
+	{
+		if (b_player->sign == 'R' || b_player->sign == 'S')
+			win = a_player;
+		else
+			win = b_player;
+	}
+	else if (a_player->sign == 'R')
+	{
+		if (b_player->sign == 'L' || b_player->sign == 'C')
+			win = a_player;
+		else
+			return b_player;
+	}
+	else if (a_player->sign == 'L')
+	{
+		if (b_player->sign == 'P' || b_player->sign == 'S')
+			win = a_player;
+		else
+			win = b_player;
+	}
+	else if (a_player->sign == 'S')
+	{
+		if (b_player->sign == 'C' || b_player->sign == 'R')
+			win = a_player;
+		else
+			win = b_player;
+	}
+	else
+		fprintf(stderr, "error\n");
+	if (win == a_player)
+		win->opponents[round] = b_player->num;
+	else
+		win->opponents[round] = a_player->num;
+	return (win);
 }
-/*-------------------------------------------------------*/
-
