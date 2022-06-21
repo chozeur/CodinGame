@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <ctype.h>
 
 typedef struct s_data{
 	int		tablen;
@@ -12,9 +13,11 @@ typedef struct s_data{
 	char	**file;
 }	t_data;
 
-int	min(int a, int b);
+
+int		min(int a, int b);
 char	*get_ext(char *file_name);
 char	*answer(t_data *data, int i);
+char	*strlow(char *str);
 
 int	main()
 {
@@ -71,7 +74,7 @@ char	*get_ext(char *file_name)
 char	*answer(t_data *data, int i)
 {
 	for (int n = 0; n < data->tablen; n++){
-		if (!strncmp(data->extension[n], get_ext(data->file[i]), min(strlen(data->extension[n]), strlen(data->file[i]))))
+		if (!strncmp(strlow(data->extension[n]), strlow(get_ext(data->file[i])), min(strlen(data->extension[n]), strlen(data->file[i]))))
 			return (data->mimetype[n]);
 	}
 	return ("UNKNOWN");
@@ -82,4 +85,12 @@ int	min(int a, int b)
 	if (a < b)
 		return (a);
 	return (b);
+}
+
+char	*strlow(char *str)
+{
+	for (int i = 0; str[i]; i++){
+		str[i] = (char)tolower(str[i]);
+	}
+	return (str);
 }
