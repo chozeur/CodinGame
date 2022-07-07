@@ -43,7 +43,7 @@ char	**setup_third(int W, int H);
 int main()
 {
 	t_data	data;
-	int		i;
+	int		i, j;
 
 	scanf("%d%d%d%d%d", &data.W, &data.H, &data.T1, &data.T2, &data.T3);
 	data.third = setup_third(data.W, data.H);
@@ -62,7 +62,10 @@ int main()
 	{
 		if (is_pos(get_next_pos(data.asteroids[i].pos_2, data.asteroids[i].dir), \
 			data.W, data.H))
+		{
 			data.asteroids[i].pos_3 = get_next_pos(data.asteroids[i].pos_2, data.asteroids[i].dir);
+			data.third[data.asteroids[i].pos_3.y][data.asteroids[i].pos_3.x] = data.asteroids[i].name;
+		}
 		else
 		{
 			data.asteroids[i].pos_3.x = 0;
@@ -71,7 +74,14 @@ int main()
 		i++;
 	}
 	///////////////////////////////////////////////////////////////
-	
+	// print third
+	i = 0;
+	while (data.third[i])
+	{
+		fprintf(stderr, "%s\n", data.third[i]);
+		printf("%s\n", data.third[i]);
+		i++;
+	}
 	return 0;
 }
 
