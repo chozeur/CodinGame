@@ -13,7 +13,7 @@ typedef struct s_list
 typedef struct s_player
 {
 	int		num;
-	char	sign[32];
+	char	*sign;
 	t_list	**opp;
 }	t_player;
 
@@ -45,7 +45,7 @@ t_data	g_data;
 
 int main(int ac, char **av, char **envp)
 {
-	g_data.players = NULL;
+	// g_data.players = NULL;
 	scanf("%d", &g_data.nb_players);
 	for (int i = 0; i < g_data.nb_players; i++) {
 		ft_lstadd_back(g_data.players, ft_lstnew(create_player(1)));
@@ -58,8 +58,9 @@ t_player	*create_player(int init)
 {
 	t_player	*new;
 
+	new->sign = malloc(sizeof(char) * 64);
 	if (init)
-		scanf("%d%s", &new->num, &new->sign);
+		scanf("%d%s", &new->num, new->sign);
 	new->opp = NULL;
 	return (new);
 }
@@ -87,11 +88,11 @@ t_list	**play_round(void)
 	b = (*g_data.players)->next;
 	while (a)
 	{
-		t_list	*_new = ft_lstnew(duel(a, b));
-		if (duel(a, b)->num == a)
-			ft_lstadd_back(((t_player *)(_new->content))->opp, duplicate_player(b));
+		t_list	*_new = ft_lstnew(duel(a->content, b->content));
+		if (duel(a->content, b->content)->num == ((t_player *)(a->content))->num)
+			ft_lstadd_back(((t_player *)(_new->content))->opp, ft_lstnew(duplicate_player(b->content)));
 		else
-			ft_lstadd_back(((t_player *)(_new->content))->opp, duplicate_player(a));
+			ft_lstadd_back(((t_player *)(_new->content))->opp, ft_lstnew(duplicate_player(a->content)));
 		ft_lstadd_back(new, _new);
 		a = a->next->next;
 		b = b->next->next;
@@ -189,6 +190,7 @@ t_player	*duplicate_player(t_player *player)
 	new->sign[1] = player->sign[1];
 	new->sign[2] = player->sign[2];
 	new->opp = player->opp;
+	return (new);
 }
 
 void	ft_lstadd_back(t_list **alst, t_list *new)
