@@ -128,6 +128,8 @@ int main(void)
 			cout << ' ';
 	}
 	cout << endl;
+	delete players[0];
+	delete[] players;
 	return (0);
 }
 
@@ -157,9 +159,15 @@ Player	*match(Player *a, Player *b)
 	if (!winner)
 		return (NULL);
 	if (winner == a)
+	{
 		winner->add_opponent(b->get_num());
+		delete b;
+	}
 	else
+	{
 		winner->add_opponent(a->get_num());
+		delete a;
+	}
 	return (winner);
 }
 
