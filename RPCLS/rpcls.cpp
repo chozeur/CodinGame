@@ -1,7 +1,4 @@
 #include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
 #include <cstdlib>
 
 using namespace std;
@@ -18,6 +15,7 @@ public:
 	bool	init_opponents(int nb_players);
 	bool	add_opponent(int opponent_id);
 	int		*get_opponents(void);
+	int		nb_opp(int nb_players) const;
 	Player(void);
 	~Player(void);
 
@@ -26,7 +24,6 @@ private:
 	string	_sign;
 	int		*_opponents;
 };
-
 
 bool	Player::set_num(int num)
 {
@@ -52,7 +49,8 @@ string	Player::get_sign(void) const
 
 bool	Player::init_opponents(int nb_players)
 {
-	this->_opponents = new int[nb_players];
+	delete[] this->_opponents;
+	this->_opponents = new int[Player::nb_opp(nb_players)];
 	if (!this->_opponents)
 		return (false);
 	return (true);
@@ -69,8 +67,22 @@ int	*Player::get_opponents(void)
 	return (this->_opponents);
 }
 
+int	Player::nb_opp(int nb_players) const
+{
+	int	nb_opp;
+
+	nb_opp = 0;
+	while (nb_players != 1)
+	{
+		nb_opp++;
+		nb_players /= 2;
+	}
+	return (nb_opp);
+}
+
 Player::Player(void)
 {
+	this->_opponents = new int[42];
 	return ;
 }
 
@@ -100,6 +112,7 @@ int main(void)
 		players[i] = new Player;
 		players[i]->set_num(numplayer);
 		players[i]->set_sign(signplayer);
+		players[i]->init_opponents(n);
 	}
 	while (n > 1)
 	{
@@ -117,14 +130,6 @@ int main(void)
 	cout << endl;
 	return (0);
 }
-
-/*
-	Rock (R) wins L C
-	Paper (P) wins R S
-	sCissors (C) P L
-	Lizard (L) S P
-	Spock (S) C R
-*/
 
 Player	*duel(Player *a, Player *b)
 {
