@@ -84,6 +84,7 @@ bool	Asteroid::calculate_pos3(int t1, int t2, int t3)
 	move.y = this->_pos2.y - this->_pos1.y;
 	this->_pos3.x = this->_pos2.x + floor(fact * move.x);
 	this->_pos3.y = this->_pos2.y + floor(fact * move.y);
+	// cerr << this->get_id() << " " << this->get_pos(3).x << "," << this->get_pos(3).y << endl;
 	return (true);
 }
 
@@ -157,7 +158,6 @@ Picture::Picture(int h, int t, string *pic): _h(h), _t(t), _pic(pic)
 
 Picture::~Picture(void)
 {
-	delete[] this->_pic;
 	return ;
 }
 
@@ -166,7 +166,7 @@ Picture::~Picture(void)
 int			count_asteroids(string *picture, int h);
 Asteroid	*getAsteroids(Picture pic1, Picture pic2);
 bool		genThirdPic(Asteroid *asteroids, int w, int h);
-char		*whosThere(Asteroid *asteroids, int x, int y);
+string		whosThere(Asteroid *asteroids, int x, int y);
 
 int	main()
 {
@@ -176,11 +176,11 @@ int	main()
 	string	*second_pic = new string[h];
 	for (int i = 0; i < h; i++)
 		cin >> first_pic[i] >> second_pic[i]; cin.ignore();
-	Picture	pic1(h, t1, first_pic), pic2(h, t2, second_pic), pic3(h, t3, NULL);
+	Picture		pic1(h, t1, first_pic), pic2(h, t2, second_pic);
+	g_nbAsteroids = count_asteroids(pic1.get_pic(), pic1.get_h());
 	Asteroid	*asteroids = getAsteroids(pic1, pic2);
 	if (!asteroids)
 		return (1);
-	g_nbAsteroids = count_asteroids(pic1.get_pic(), pic1.get_h());
 	for (int i = 0; i < g_nbAsteroids; i++)
 		asteroids[i].calculate_pos3(t1, t2, t3);
 	if (!genThirdPic(asteroids, w, h))
@@ -194,9 +194,14 @@ int	count_asteroids(string *picture, int h)
 	int	count = 0;
 
 	for (int i = 0; i < h; i++)
+	{
 		for (int j = 0; picture[i][j]; j++)
+		{
 			if (isalpha(picture[i][j]))
 				count++;
+			// cerr << "i,j " << i << "," << j << " " << picture[i][j] << endl;
+		}
+	}
 	return (count);
 }
 
@@ -220,25 +225,24 @@ Asteroid	*getAsteroids(Picture pic1, Picture pic2)
 				for (int l = 0; l < g_nbAsteroids; l++)
 					if (asteroids[l].get_id() == pic2.get_pic()[i][j])
 						asteroids[l].set_pos(2, j, i);
+	// cerr << "ast = " << asteroids[0].get_id() << " pos1 = " << asteroids[0].get_pos(1).x << "," << asteroids[0].get_pos(1).y << "pos2 = " << asteroids[0].get_pos(2).x << "," << asteroids[0].get_pos(2).y << endl;
 	return (asteroids);
 }
 
 bool	genThirdPic(Asteroid *asteroids, int w, int h)
 {
-	string	*pic3 = new string[h];
-	if (!pic3)
-		return (false);
 	for (int i = 0; i < h; i++)
 	{
-		pic3[i].clear();
 		for (int j = 0; j < w; j++)
-			pic3[i].append(whosThere(asteroids, j, i));
-		cout << pic3[i] << endl;
+		{
+			cout << whosThere(asteroids, j, i);
+		}
+		cout << endl;
 	}
 	return (true);
 }
 
-char	*whosThere(Asteroid *asteroids, int x, int y)
+string	whosThere(Asteroid *asteroids, int x, int y)
 {
 	char	I[2] = {'\0', '\0'};
 
@@ -254,5 +258,6 @@ char	*whosThere(Asteroid *asteroids, int x, int y)
 	}
 	if (!I[0])
 		I[0] = '.';
+	// cerr << I << endl;
 	return (I);
 }
