@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <ctype.h>
 #include <tgmath.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -15,6 +16,7 @@ struct	s_vect{
 };
 
 /* ASTEROID */
+float	extract_decimal(float x);
 
 class	Asteroid{
 
@@ -75,16 +77,27 @@ char	Asteroid::get_id(void) const
 	return (this->_id);
 }
 
+/*
+1 5 6
+a bouge de 4 en 5s
+
+*/
+
 bool	Asteroid::calculate_pos3(int t1, int t2, int t3)
 {
+	setprecision(2);
 	s_vect	move;
-	float	fact = (t3 - t2) / (t2 - t1);
+	float	fact = ((float)t3 - (float)t2) / ((float)t2 - (float)t1);
 
 	move.x = this->_pos2.x - this->_pos1.x;
 	move.y = this->_pos2.y - this->_pos1.y;
-	this->_pos3.x = this->_pos2.x + floor(fact * move.x);
-	this->_pos3.y = this->_pos2.y + floor(fact * move.y);
-	// cerr << this->get_id() << " " << this->get_pos(3).x << "," << this->get_pos(3).y << endl;
+	this->_pos3.x = round((float)((float)(this->_pos2.x) + (float)(fact * (float)(move.x))));
+	this->_pos3.y = round((float)((float)(this->_pos2.y) + (float)(fact * (float)(move.y))));
+	if (extract_decimal((float)((float)(this->_pos2.x) + (float)(fact * (float)(move.x)))) == (float)(0.50))
+		(move.x >= 0) ? this->_pos3.x++ : this->_pos3.x--;
+	if (extract_decimal((float)((float)(this->_pos2.y) + (float)(fact * (float)(move.y)))) == (float)(0.50))
+		(move.y >= 0) ? this->_pos3.y++ : this->_pos3.y--;
+	cerr << "Asetroid id : " << this->_id << "([" << this->_pos1.x << ";" << this->_pos1.y << "][" << this->_pos2.x << ";" << this->_pos2.y << "])" << "\tmove = {" << move.x << "," << move.y << "}\tfact = " << fact << "\t_pos3 = [" << this->_pos3.x << "," << this->_pos3.y << "]" << endl;
 	return (true);
 }
 
@@ -260,4 +273,13 @@ string	whosThere(Asteroid *asteroids, int x, int y)
 		I[0] = '.';
 	// cerr << I << endl;
 	return (I);
+}
+
+float	extract_decimal(float x)
+{
+	setprecision(2);
+	int		integer_part = (int)(x);
+	float	decimal_part = x - (float)integer_part;
+	// cerr << x << " to EXTRACT DECIMAL = " << decimal_part << endl;
+	return (decimal_part);
 }
