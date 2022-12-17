@@ -10,6 +10,7 @@ struct coord {
 	int	y;
 	coord(void):x(0),y(0){}
 	coord(int xi, int yi):x(xi),y(yi){}
+	coord(coord const &src){*this = src;}
 	coord	&operator=(const coord &src){
 		if (this == &src)
 			return (*this);
@@ -38,27 +39,41 @@ private:
 	bool	_canSpawn;
 	bool	_inRangeOfRecycler;
 public:
-	Position(void):	_pos({0,0}),_scrapAmount(0),_owner(0),
+	Position(void):_pos({0,0}),_scrapAmount(0),_owner(0),
 					_units(0),_recycler(0),_canBuild(0),
 					_canSpawn(0),_inRangeOfRecycler(0){}
+	Position(Position const &src){*this = src;}
 	~Position(void){}
-	void	set_pos(coord pos){this->_pos = pos;}
-	void	set_scrapAmount(int scrapAmount){this->_scrapAmount = scrapAmount;}
-	void	set_owner(int owner){this->_owner = owner;}
-	void	set_units(int units){this->_units = units;}
-	void	set_recycler(bool recycler){this->_recycler = recycler;}
-	void	set_canbuild(bool canbuild){this->_canBuild = canbuild;}
-	void	set_canspawn(bool canspawn){this->_canSpawn = canspawn;}
-	void	set_inRangeOfRecycler(bool inRangeOfRecycler){this->_inRangeOfRecycler = inRangeOfRecycler;}
-	coord	get_pos(void) const {return (this->_pos);}
-	int		get_scrapAmount(void) const {return (this->_scrapAmount);}
-	int		get_owner(void) const {return (this->_owner);}
-	int		get_units(void) const {return (this->_units);}
-	bool	get_recycler(void) const {return (this->_recycler);}
-	bool	get_canbuild(void) const {return (this->_canBuild);}
-	bool	get_canspawn(void) const {return (this->_canSpawn);}
-	bool	get_inRangeOfRecycler(void) const {return (this->_inRangeOfRecycler);}
-	void	printDebug(void) const {
+	Position	&operator=(Position const &src){
+		if (this == &src)
+			return (*this);
+		this->_pos = src._pos;
+		this->_scrapAmount = src._scrapAmount;
+		this->_owner = src._owner;
+		this->_units = src._units;
+		this->_recycler = src._recycler;
+		this->_canBuild = src._canBuild;
+		this->_canSpawn = src._canSpawn;
+		this->_inRangeOfRecycler = src._inRangeOfRecycler;
+		return (*this);
+	}
+	void		set_pos(coord pos){this->_pos = pos;}
+	void		set_scrapAmount(int scrapAmount){this->_scrapAmount = scrapAmount;}
+	void		set_owner(int owner){this->_owner = owner;}
+	void		set_units(int units){this->_units = units;}
+	void		set_recycler(bool recycler){this->_recycler = recycler;}
+	void		set_canbuild(bool canbuild){this->_canBuild = canbuild;}
+	void		set_canspawn(bool canspawn){this->_canSpawn = canspawn;}
+	void		set_inRangeOfRecycler(bool inRangeOfRecycler){this->_inRangeOfRecycler = inRangeOfRecycler;}
+	coord		get_pos(void) const {return (this->_pos);}
+	int			get_scrapAmount(void) const {return (this->_scrapAmount);}
+	int			get_owner(void) const {return (this->_owner);}
+	int			get_units(void) const {return (this->_units);}
+	bool		get_recycler(void) const {return (this->_recycler);}
+	bool		get_canbuild(void) const {return (this->_canBuild);}
+	bool		get_canspawn(void) const {return (this->_canSpawn);}
+	bool		get_inRangeOfRecycler(void) const {return (this->_inRangeOfRecycler);}
+	void		printDebug(void) const {
 		std::cerr <<
 		"================" << this->_pos << '(' << (this->_owner?(this->_owner<0?"HERB/FREE":"MINE"):"OPP") << ')' << "================" << std::endl <<
 		"scrapAmmount = " << this->_scrapAmount <<	" | units = " << this->_units << std::endl <<
@@ -66,6 +81,10 @@ public:
 		"canspawn     = " << this->_canSpawn	<<	" | inRangeOfRecycler = " << this->_inRangeOfRecycler << std::endl;
 	}
 };
+std::ostream	&operator<<(std::ostream &os, const Position &pos){
+	this->printDebug();
+	return (os);
+}
 
 /* MAP */
 class Map {
@@ -80,10 +99,26 @@ public:
 			this->_mapArray[i] = new Position[width];
 		return ;
 	}
+	Map(Map const &src){*this = src;}
 	~Map(void){
 		for(int i = 0; i < this->_height; ++i)
 			delete[] this->_mapArray[i];
 		delete[] this->_mapArray;
+	}
+	Map			&operator=(Map const &src){
+		if (this == &src)
+			return (*this);
+		for(int i = 0; i < this->_height; ++i)
+			delete[] this->_mapArray[i];
+		delete[] this->_mapArray;
+		this->_mapArray = new Position*[src._height];
+		for (int i = 0; i < src._height; ++i)
+			this->_mapArray[i] = new Position[src._width];
+		for (int i = 0; i < src._height; ++i)
+			for (int j = 0; j < src._width; ++j)
+				this->_mapArray[i][j] = src._mapArray[i][j];
+		this->_width = src._width;
+		this->_height = src._height;
 	}
 	void		set_mapArray(void){
 		for (int i = 0; i < this->_height; ++i){
@@ -233,41 +268,70 @@ public:
 		}
 		return (closest);
 	}
-	void print_spiral (int ** matrix, int size)
-{
-	int x = 0; // current position; x
-	int y = 0; // current position; y
-	int d = 0; // current direction; 0=RIGHT, 1=DOWN, 2=LEFT, 3=UP
-	int c = 0; // counter
-	int s = 1; // chain size
+	void		printpiral(int size) const {
+		int x = 0; // current position; x
+		int y = 0; // current position; y
+		int d = 0; // current direction; 0=RIGHT, 1=DOWN, 2=LEFT, 3=UP
+		int c = 0; // counter
+		int s = 1; // chain size
 
-	// starting point
-	x = ((int)floor(size/2.0))-1;
-	y = ((int)floor(size/2.0))-1;
+		// starting point
+		x = ((int)floor(size/2.0))-1;
+		y = ((int)floor(size/2.0))-1;
 
-	for (int k=1; k<=(size-1); k++)
-	{
-		for (int j=0; j<(k<(size-1)?2:3); j++)
-		{
-			for (int i=0; i<s; i++)
-			{
-				std::cout << matrix[x][y] << " ";
-				c++;
+		for (int k=1; k<=(size-1); k++){
+			for (int j=0; j<(k<(size-1)?2:3); j++){
+				for (int i=0; i<s; i++){
+					std::cout << this->get_mapArray()[x][y] << " ";
+					c++;
 
-				switch (d)
-				{
-					case 0: y = y + 1; break;
-					case 1: x = x + 1; break;
-					case 2: y = y - 1; break;
-					case 3: x = x - 1; break;
+					switch (d){
+						case 0: y = y + 1; break;
+						case 1: x = x + 1; break;
+						case 2: y = y - 1; break;
+						case 3: x = x - 1; break;
+					}
+				}
+				d = (d+1)%4;
+			}
+			s = s + 1;
+		}
+	}
+	Position	startDirection(Position &pos) const {
+		//	WRITE HERE
+	}
+};
+
+class FifthMap : public Map {
+private:
+	/* data */
+public:
+	FifthMap(Map &fullMap, unsigned int const index):Map(fullMap._width / 5, fullMap._height),_index(index){
+		for (int i = 0; i < this->_height; ++i){
+			for (int j = 0; j < this->_width; ++j){
+				this->_mapArray[i][j] = fullMap._mapArray[i][j + index * this->_width];
+				if (index == 4 && j == this->_width - 1){
+					while (j + index * this->_width != fullMap.get_width()){
+						this->_mapArray[i][j] = fullMap._mapArray[i][j + index * this->_width];
+						++j;
+					}
 				}
 			}
-			d = (d+1)%4;
 		}
-		s = s + 1;
 	}
-}
+	~FifthMap(void){}
+	FifthMap	&operator=(FifthMap const &src){
+		if (this == &src)
+			return (*this);
+		Map::operator=(src);
+		this->_index = src._index;
+		return (*this);
+	}
+private:
+	FifthMap(void){}
+	unsigned int const	_index;
 };
+
 
 /* PLAYER */
 class Player {
@@ -276,7 +340,14 @@ private:
 	Map const	&_map;
 public:
 	Player(Map &map):_matter(0), _map(map){}
+	Player(Player const &src){*this = src;}
 	~Player(void){}
+	Player	&operator=(Player const &src){
+		if (this == &src)
+			return (*this);
+		this->_matter = src._matter;
+		this->_map = src._map;
+	}
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
