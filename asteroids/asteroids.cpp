@@ -91,11 +91,11 @@ bool	Asteroid::calculate_pos3(int t1, int t2, int t3)
 
 	move.x = this->_pos2.x - this->_pos1.x;
 	move.y = this->_pos2.y - this->_pos1.y;
-	this->_pos3.x = round((float)((float)(this->_pos2.x) + (float)(fact * (float)(move.x))));
-	this->_pos3.y = round((float)((float)(this->_pos2.y) + (float)(fact * (float)(move.y))));
-	if (extract_decimal((float)((float)(this->_pos2.x) + (float)(fact * (float)(move.x)))) == (float)(0.50))
+	this->_pos3.x = round((static_cast<float>(this->_pos2.x) + (fact * static_cast<float>(move.x))));
+	this->_pos3.y = round((static_cast<float>(this->_pos2.y) + (fact * static_cast<float>(move.y))));
+	if (extract_decimal((static_cast<float>(this->_pos2.x) + (fact * static_cast<float>(move.x)))) == (0.50))
 		(move.x >= 0) ? this->_pos3.x++ : this->_pos3.x--;
-	if (extract_decimal((float)((float)(this->_pos2.y) + (float)(fact * (float)(move.y)))) == (float)(0.50))
+	if (extract_decimal((static_cast<float>(this->_pos2.y) + (fact * static_cast<float>(move.y)))) == (0.50))
 		(move.y >= 0) ? this->_pos3.y++ : this->_pos3.y--;
 	cerr << "Asetroid id : " << this->_id << "([" << this->_pos1.x << ";" << this->_pos1.y << "][" << this->_pos2.x << ";" << this->_pos2.y << "])" << "\tmove = {" << move.x << "," << move.y << "}\tfact = " << fact << "\t_pos3 = [" << this->_pos3.x << "," << this->_pos3.y << "]" << endl;
 	return (true);
