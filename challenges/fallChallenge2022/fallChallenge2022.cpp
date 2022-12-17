@@ -8,6 +8,7 @@ unsigned int	round = 0;
 struct coord {
 	int	x;
 	int	y;
+	coord(void):x(0),y(0){}
 	coord(int xi, int yi):x(xi),y(yi){}
 	coord	&operator=(const coord &src){
 		if (this == &src)
@@ -23,6 +24,7 @@ std::ostream	&operator<<(std::ostream &os, const coord &pos){
 	os << pos.x << ' ' << pos.y;
 	return (os);
 }
+coord	TL, TR, BL, BR, CTR;
 
 /* POSITION */
 class Position {
@@ -114,13 +116,13 @@ public:
 			for (int j = 0; j < this->_width; ++j)
 				this->_mapArray[i][j].printDebug();
 	}
-	coord		firstCanBuild(void) const {
+	Position	firstCanBuild(void) const {
 		for (int i = 0; i < this->_height; ++i)
 			for (int j = 0; j < this->_width; ++j)
 				if (this->_mapArray[i][j].get_canbuild())
-					return (this->_mapArray[i][j].get_pos());
+					return (this->_mapArray[i][j]);
 	}
-	coord		closeMiddleCanBuild(void) const {
+	Position	closeMiddleCanBuild(void) const {
 		int top = 0, bottom = this->_height - 1, left = 0, right = this->_width - 1, dir = 1;
 		Position	closest;
 		while (top <= bottom && left <= right){
@@ -158,9 +160,9 @@ public:
 			std::cerr << closest.get_pos().x << ' ' << closest.get_pos().y << std::endl;
 			throw (std::exception());
 		}
-		return (closest.get_pos());
+		return (closest);
 	}
-	coord		move(coord pos, int robots) const {
+	Position	move(coord pos, int robots) const {
 		if (!robots)
 			throw (std::exception());
 		for (int i = 0; i < this->_height && robots; ++i){
@@ -172,14 +174,14 @@ public:
 			}
 		}
 	}
-	coord		firstCanSpawn(void) const {
+	Position	firstCanSpawn(void) const {
 		for (int i = 0; i < this->_height; ++i)
 			for (int j = 0; j < this->_width; ++j)
 				if (this->_mapArray[i][j].get_canspawn())
-					return (this->_mapArray[i][j].get_pos());
+					return (this->_mapArray[i][j]);
 		throw (std::exception());
 	}
-	coord		closeMiddleCanSpawn(void) const {
+	Position	closeMiddleCanSpawn(void) const {
 		int top = 0, bottom = this->_height - 1, left = 0, right = this->_width - 1, dir = 1;
 		Position	closest;
 		while (top <= bottom && left <= right){
@@ -229,8 +231,42 @@ public:
 			std::cerr << closest.get_pos().x << ' ' << closest.get_pos().y << std::endl;
 			throw (std::exception());
 		}
-		return (closest.get_pos());
+		return (closest);
 	}
+	void print_spiral (int ** matrix, int size)
+{
+	int x = 0; // current position; x
+	int y = 0; // current position; y
+	int d = 0; // current direction; 0=RIGHT, 1=DOWN, 2=LEFT, 3=UP
+	int c = 0; // counter
+	int s = 1; // chain size
+
+	// starting point
+	x = ((int)floor(size/2.0))-1;
+	y = ((int)floor(size/2.0))-1;
+
+	for (int k=1; k<=(size-1); k++)
+	{
+		for (int j=0; j<(k<(size-1)?2:3); j++)
+		{
+			for (int i=0; i<s; i++)
+			{
+				std::cout << matrix[x][y] << " ";
+				c++;
+
+				switch (d)
+				{
+					case 0: y = y + 1; break;
+					case 1: x = x + 1; break;
+					case 2: y = y - 1; break;
+					case 3: x = x - 1; break;
+				}
+			}
+			d = (d+1)%4;
+		}
+		s = s + 1;
+	}
+}
 };
 
 /* PLAYER */
@@ -246,7 +282,7 @@ public:
 	void	build(void) const {
 		if (round % 4){
 			try {
-				std::cout << "BUILD " << this->_map.closeMiddleCanBuild() << ';';
+				std::cout << "BUILD " << this->_map.closeMiddleCanBuild().get_pos() << ';';
 			} catch (std::exception &e){std::cerr << "Player::build() : Error";}
 		}
 	}
@@ -262,7 +298,7 @@ public:
 	void	spawn(void) const {
 		if (round % 2){
 			try {
-				std::cout << "SPAWN 1 " << this->_map.closeMiddleCanSpawn() << ';';
+				std::cout << "SPAWN 1 " << this->_map.closeMiddleCanSpawn().get_pos() << ';';
 			} catch (std::exception &e){std::cerr << "Player::spawn() : Error";}
 		}
 	}
@@ -271,10 +307,13 @@ public:
 /* FUNCTIONS */
 
 /* MAIN */
+
 int main(void){
 	int width;
 	int height;
 	std::cin >> width >> height; std::cin.ignore();
+
+	TL = {0,0}; TR = {width - 1,0}; BL = {0,height - 1}; BR = {width - 1,height - 1}; CTR = {width / 2,height / 2};
 
 	Map	cmap(width, height);
 
