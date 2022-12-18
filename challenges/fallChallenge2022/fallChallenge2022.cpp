@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 unsigned int	round = 0;
 
@@ -18,14 +19,14 @@ struct coord {
 		this->y = src.y;
 	}
 	bool	operator==(const coord pos) const {
-		this->x == pos.x && this->y == pos.y ? true : false;
+		(this->x == pos.x && this->y == pos.y) ? true : false;
 	}
 };
 std::ostream	&operator<<(std::ostream &os, const coord &pos){
 	os << pos.x << ' ' << pos.y;
 	return (os);
 }
-coord	TL, TR, BL, BR, CTR;
+coord	TL, T, TR, L, CTR, R, BL, B, BR;
 
 /* POSITION */
 class Position {
@@ -82,16 +83,17 @@ public:
 	}
 };
 std::ostream	&operator<<(std::ostream &os, const Position &pos){
-	this->printDebug();
+	pos.printDebug();
 	return (os);
 }
 
 /* MAP */
-class Map {
+
+class	Map {
 private:
 	Position	**_mapArray;
-	int const	_width;
-	int const	_height;
+	int			_width;
+	int			_height;
 public:
 	Map(int width, int height):_width(width),_height(height){
 		this->_mapArray = new Position*[height];
@@ -99,7 +101,7 @@ public:
 			this->_mapArray[i] = new Position[width];
 		return ;
 	}
-	Map(Map const &src){*this = src;}
+	Map(Map const &src):_width(src._width),_height(src._height){*this = src;}
 	~Map(void){
 		for(int i = 0; i < this->_height; ++i)
 			delete[] this->_mapArray[i];
@@ -146,10 +148,22 @@ public:
 	Position	**get_mapArray(void) const {return (this->_mapArray);}
 	int			get_width(void) const {return (this->_width);}
 	int			get_height(void) const {return (this->_height);}
+	Position	coordToPos(coord c) const {
+		for (int i = 0; i < this->_height; ++i){
+			for (int j = 0; j < this->_width; ++j){
+				if (this->_mapArray[i][j].get_pos().x == c.x && this->_mapArray[i][j].get_pos().y == c.y)
+					return (this->_mapArray[i][j]);
+			}
+		}
+		throw (std::exception());
+	}
 	void		printDebug(void) const {
-		for (int i = 0; i < this->_height; ++i)
-			for (int j = 0; j < this->_width; ++j)
+		for (int i = 0; i < this->_height; ++i){
+			for (int j = 0; j < this->_width; ++j){
 				this->_mapArray[i][j].printDebug();
+				std::cerr << "AREA = " << this->area(_mapArray[i][j]) << std::endl;
+			}
+		}
 	}
 	Position	firstCanBuild(void) const {
 		for (int i = 0; i < this->_height; ++i)
@@ -197,17 +211,54 @@ public:
 		}
 		return (closest);
 	}
-	Position	move(coord pos, int robots) const {
-		if (!robots)
+	Position	move(Position pos) const {
+		if (!pos.get_units())
 			throw (std::exception());
-		for (int i = 0; i < this->_height && robots; ++i){
-			for (int j = 0; j < this->_width && robots; ++j){
-				if (this->_mapArray[i][j].get_scrapAmount() > 0){
-					std::cout << "MOVE 1 " << pos << ' ' << j << ' ' << i << ';';
-					--robots;
-				}
-			}
+		if (round < 3)
+			return (this->startDirection(pos));
+		try{
+			return (this->closestNotOwned(pos));
+		} catch (std::exception &e){
+			/* go safe */
 		}
+
+	}
+	Position	closestNotOwned(Position const &pos) const {
+		static int	dir = 0;
+		coord		check;
+		if (dir == 1)
+			goto down;
+		else if (dir == 2)
+			goto left;
+		else if (dir == 3)
+			goto up;
+		else
+			goto right;
+right:
+		check = {pos.get_pos().x + 1,pos.get_pos().y};
+		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
+			dir = 1;
+			return (this->coordToPos(check));
+		}
+down:
+		check = {pos.get_pos().x,pos.get_pos().y + 1};
+		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
+			dir = 2;
+			return (this->coordToPos(check));
+		}
+left:
+		check = {pos.get_pos().x - 1,pos.get_pos().y};
+		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
+			dir = 3;
+			return (this->coordToPos(check));
+		}
+up:
+		check = {pos.get_pos().x,pos.get_pos().y - 1};
+		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
+			dir = 0;
+			return (this->coordToPos(check));
+		}
+		throw (std::exception());
 	}
 	Position	firstCanSpawn(void) const {
 		for (int i = 0; i < this->_height; ++i)
@@ -268,7 +319,7 @@ public:
 		}
 		return (closest);
 	}
-	void		printpiral(int size) const {
+/* 	void		printpiral(int size) const {
 		int x = 0; // current position; x
 		int y = 0; // current position; y
 		int d = 0; // current direction; 0=RIGHT, 1=DOWN, 2=LEFT, 3=UP
@@ -297,16 +348,34 @@ public:
 			s = s + 1;
 		}
 	}
+ */
+	std::string	area(Position &pos) const {
+		std::string	area("");
+		if (pos.get_pos().y <= (this->_height - 1) / 3)
+			area += "top";
+		else if (pos.get_pos().y >= 2 * (this->_height - 1) / 3 + (this->_height - 1) % 3)
+			area += "bottom";
+		if (pos.get_pos().x <= (this->_width - 1) / 3)
+			area += (area == "" ? "left" : "-left");
+		else if (pos.get_pos().x >= 2 * (this->_width - 1) / 3 + (this->_width - 1) % 3)
+			area += (area == "" ? "right" : "-right");
+		if (area == "")
+			area += "center";
+		return (area);
+	}
 	Position	startDirection(Position &pos) const {
-		//	WRITE HERE
+		std::map<std::string, coord>	areaToOppositePos {{"top-left",BR},{"top",B},{"top-right",BL},
+																{"left",R},{"center",CTR},{"right",L},
+															{"bottom-left",TR},{"bottom",T},{"bottom-right",TL}};
+		std::cerr << "startDirection(" << pos.get_pos() << ") = " << this->coordToPos(areaToOppositePos[this->area(pos)]).get_pos() << std::endl;
+		return (this->coordToPos(areaToOppositePos[this->area(pos)]));
 	}
 };
 
-class FifthMap : public Map {
+/* class FifthMap : public Map {
 private:
-	/* data */
 public:
-	FifthMap(Map &fullMap, unsigned int const index):Map(fullMap._width / 5, fullMap._height),_index(index){
+	FifthMap(Map &fullMap, unsigned int const index):Map(index == 4 ? fullMap._width / 5 + fullMap._width % 5 : fullMap._width / 5, fullMap._height),_index(index){
 		for (int i = 0; i < this->_height; ++i){
 			for (int j = 0; j < this->_width; ++j){
 				this->_mapArray[i][j] = fullMap._mapArray[i][j + index * this->_width];
@@ -331,15 +400,15 @@ private:
 	FifthMap(void){}
 	unsigned int const	_index;
 };
-
+*/
 
 /* PLAYER */
 class Player {
 private:
 	int			_matter;
-	Map const	&_map;
+	Map			*_map;
 public:
-	Player(Map &map):_matter(0), _map(map){}
+	Player(Map *map):_matter(0), _map(map){}
 	Player(Player const &src){*this = src;}
 	~Player(void){}
 	Player	&operator=(Player const &src){
@@ -351,17 +420,18 @@ public:
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
-		if (round % 4){
+		if (!(round % 4)){
 			try {
-				std::cout << "BUILD " << this->_map.closeMiddleCanBuild().get_pos() << ';';
+				std::cout << "BUILD " << this->_map->closeMiddleCanBuild().get_pos() << ';';
 			} catch (std::exception &e){std::cerr << "Player::build() : Error";}
 		}
 	}
 	void	move(void) const {
-		for (int i = 0; i < this->_map.get_height(); ++i){
-			for (int j = 0; j < this->_map.get_width(); ++j){
+		for (int i = 0; i < this->_map->get_height(); ++i){
+			for (int j = 0; j < this->_map->get_width(); ++j){
 				try {
-					this->_map.move({j,i},this->_map.get_mapArray()[i][j].get_units());
+					this->_map->move(this->_map->get_mapArray()[i][j]);
+					std::cout << "MOVE " << this->_map->get_mapArray()[i][j].get_units() << ' ' << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
 				} catch (std::exception &e){}
 			}
 		}
@@ -369,7 +439,7 @@ public:
 	void	spawn(void) const {
 		if (round % 2){
 			try {
-				std::cout << "SPAWN 1 " << this->_map.closeMiddleCanSpawn().get_pos() << ';';
+				std::cout << "SPAWN 1 " << this->_map->closeMiddleCanSpawn().get_pos() << ';';
 			} catch (std::exception &e){std::cerr << "Player::spawn() : Error";}
 		}
 	}
@@ -384,11 +454,13 @@ int main(void){
 	int height;
 	std::cin >> width >> height; std::cin.ignore();
 
-	TL = {0,0}; TR = {width - 1,0}; BL = {0,height - 1}; BR = {width - 1,height - 1}; CTR = {width / 2,height / 2};
+	TL = {0,0};					T = {(width - 1) / 2,0};					TR = {width - 1,0};
+	L  = {0,(height - 1) / 2};	CTR = {(width - 1) / 2,(height - 1) / 2};	R = {width - 1,(height - 1) / 2};
+	BL = {0,height - 1};		B = {(width - 1) / 2,height - 1};			BR = {width - 1,height - 1};
 
 	Map	cmap(width, height);
 
-	Player	myself(cmap);
+	Player	myself(&cmap);
 
 	while (++round){
 
