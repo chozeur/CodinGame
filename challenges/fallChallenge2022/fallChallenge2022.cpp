@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   fallChallenge2022.cpp                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
+/*   Updated: 2022/12/18 05:17:55 by flcarval         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -211,10 +223,87 @@ public:
 		}
 		return (closest);
 	}
+	bool		threatened(Position const &pos) const {
+		static int	dir = 0;
+		coord		check;
+		if (dir == 1)
+			goto down;
+		else if (dir == 2)
+			goto left;
+		else if (dir == 3)
+			goto up;
+		else
+			goto right;
+right:
+		check = {pos.get_pos().x + 1,pos.get_pos().y};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
+			dir = 1;
+			return (true);
+		}
+down:
+		check = {pos.get_pos().x,pos.get_pos().y + 1};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
+			dir = 2;
+			return (true);
+		}
+left:
+		check = {pos.get_pos().x - 1,pos.get_pos().y};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
+			dir = 3;
+			return (true);
+		}
+up:
+		check = {pos.get_pos().x,pos.get_pos().y - 1};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
+			dir = 0;
+			return (true);
+		}
+		throw (std::exception());
+	}
+	Position	inDanger(void) const {	//	FROM MIDDLE SPIRAL
+		int top = 0, bottom = this->_height - 1, left = 0, right = this->_width - 1, dir = 1;
+		Position	closest;
+		while (top <= bottom && left <= right){
+			if (dir == 1){			// moving left->right -> mA[top][i]
+				for (int i = left; i <= right; ++i)
+					if (this->threatened(this->_mapArray[top][i]))
+						closest = this->_mapArray[top][i];
+				++top;
+				dir = 2;
+			}
+			else if (dir == 2){		// moving top->bottom -> mA[i][right]
+				for (int i = top; i <= bottom; ++i)
+					if (this->threatened(this->_mapArray[i][right]))
+						closest = this->_mapArray[i][right];
+				--right;
+				dir = 3;
+			}
+			else if (dir == 3){		 // moving right->left -> mA[bottom][i]
+				for (int i = right; i >= left; --i)
+					if (this->threatened(this->_mapArray[bottom][i]))
+						closest = this->_mapArray[bottom][i];
+				--bottom;
+				dir = 4;
+			}
+			else if (dir == 4){		 // moving bottom->up -> mA[i][left]
+				for (int i = bottom; i >= top; --i)
+					if (this->threatened(this->_mapArray[i][left]))
+						closest = this->_mapArray[i][left];
+				++left;
+				dir = 1;
+			}
+		}
+		if (closest.get_pos().x == -1)
+		{
+			std::cerr << closest.get_pos().x << ' ' << closest.get_pos().y << std::endl;
+			throw (std::exception());
+		}
+		return (closest);
+	}
 	Position	move(Position pos) const {
 		if (!pos.get_units())
 			throw (std::exception());
-		if (round < 3)
+		if (round < 4)
 			return (this->startDirection(pos));
 		try{
 			return (this->closestNotOwned(pos));
@@ -364,10 +453,15 @@ up:
 		return (area);
 	}
 	Position	startDirection(Position &pos) const {
-		std::map<std::string, coord>	areaToOppositePos {{"top-left",BR},{"top",B},{"top-right",BL},
+		static bool	state = true;
+		std::map<std::string, coord>	areaToOppositePos		{{"top-left",BR},{"top",B},{"top-right",BL},
 																{"left",R},{"center",CTR},{"right",L},
-															{"bottom-left",TR},{"bottom",T},{"bottom-right",TL}};
-		std::cerr << "startDirection(" << pos.get_pos() << ") = " << this->coordToPos(areaToOppositePos[this->area(pos)]).get_pos() << std::endl;
+																{"bottom-left",TR},{"bottom",T},{"bottom-right",TL}};
+		std::map<std::string, coord>	areaToSameOppositePos	{{"top-left",BL},{"top",B},{"top-right",BR},
+																{"left",BL},{"center",CTR},{"right",TR},
+																{"bottom-left",TL},{"bottom",T},{"bottom-right",TR}};
+		std::cerr << "startDirection(" << pos.get_pos() << ") = " << this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]).get_pos() << std::endl;
+		state = !state;
 		return (this->coordToPos(areaToOppositePos[this->area(pos)]));
 	}
 };
@@ -420,10 +514,14 @@ public:
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
-		if (!(round % 4)){
-			try {
-				std::cout << "BUILD " << this->_map->closeMiddleCanBuild().get_pos() << ';';
-			} catch (std::exception &e){std::cerr << "Player::build() : Error";}
+		try {
+			std::cerr << "BUILD " << this->_map->inDanger() << ';';
+		} catch (std::exception &e){
+			if (!(round % 4)){
+				try {
+					std::cout << "BUILD " << this->_map->closeMiddleCanBuild().get_pos() << ';';
+				} catch (std::exception &e){std::cerr << "Player::build() : Error";}
+			}
 		}
 	}
 	void	move(void) const {
