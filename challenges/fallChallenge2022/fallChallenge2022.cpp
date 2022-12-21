@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
-/*   Updated: 2022/12/18 05:17:55 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/12/21 04:21:28 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ private:
 	bool	_canSpawn;
 	bool	_inRangeOfRecycler;
 public:
-	Position(void):_pos({0,0}),_scrapAmount(0),_owner(0),
+	Position(void):_pos({-1,-1}),_scrapAmount(0),_owner(0),
 					_units(0),_recycler(0),_canBuild(0),
 					_canSpawn(0),_inRangeOfRecycler(0){}
 	Position(Position const &src){*this = src;}
@@ -224,41 +224,33 @@ public:
 		return (closest);
 	}
 	bool		threatened(Position const &pos) const {
-		static int	dir = 0;
-		coord		check;
-		if (dir == 1)
-			goto down;
-		else if (dir == 2)
-			goto left;
-		else if (dir == 3)
-			goto up;
-		else
-			goto right;
-right:
-		check = {pos.get_pos().x + 1,pos.get_pos().y};
-		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
-			dir = 1;
+		std::cerr << pos << " looks for threat" << std::endl;
+		coord	check = {pos.get_pos().x + 1,pos.get_pos().y};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
 			return (true);
-		}
-down:
+		check = {pos.get_pos().x + 2,pos.get_pos().y};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
+			return (true);
 		check = {pos.get_pos().x,pos.get_pos().y + 1};
-		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
-			dir = 2;
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
 			return (true);
-		}
-left:
+		check = {pos.get_pos().x,pos.get_pos().y + 2};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
+			return (true);
 		check = {pos.get_pos().x - 1,pos.get_pos().y};
-		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
-			dir = 3;
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
 			return (true);
-		}
-up:
+		check = {pos.get_pos().x - 2,pos.get_pos().y};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
+			return (true);
 		check = {pos.get_pos().x,pos.get_pos().y - 1};
-		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0){
-			dir = 0;
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
 			return (true);
-		}
-		throw (std::exception());
+		check = {pos.get_pos().x,pos.get_pos().y - 2};
+		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
+			return (true);
+		std::cerr << pos << " no threat detected" << std::endl;
+		return (false);
 	}
 	Position	inDanger(void) const {	//	FROM MIDDLE SPIRAL
 		int top = 0, bottom = this->_height - 1, left = 0, right = this->_width - 1, dir = 1;
@@ -266,29 +258,85 @@ up:
 		while (top <= bottom && left <= right){
 			if (dir == 1){			// moving left->right -> mA[top][i]
 				for (int i = left; i <= right; ++i)
-					if (this->threatened(this->_mapArray[top][i]))
+					if (threatened(this->_mapArray[top][i])){
 						closest = this->_mapArray[top][i];
+						std::cout << "MESSAGE Threatened " << left << ' ' << i << " = true;";
+						std::cerr << "THREAT" << std::endl;
+					}
 				++top;
 				dir = 2;
 			}
 			else if (dir == 2){		// moving top->bottom -> mA[i][right]
 				for (int i = top; i <= bottom; ++i)
-					if (this->threatened(this->_mapArray[i][right]))
+					if (threatened(this->_mapArray[i][right])){
 						closest = this->_mapArray[i][right];
+						std::cout << "MESSAGE Threatened " << left << ' ' << i << " = true;";
+						std::cerr << "THREAT" << std::endl;
+					}
 				--right;
 				dir = 3;
 			}
 			else if (dir == 3){		 // moving right->left -> mA[bottom][i]
 				for (int i = right; i >= left; --i)
-					if (this->threatened(this->_mapArray[bottom][i]))
+					if (threatened(this->_mapArray[bottom][i])){
 						closest = this->_mapArray[bottom][i];
+						std::cout << "MESSAGE Threatened " << left << ' ' << i << " = true;";
+						std::cerr << "THREAT" << std::endl;
+					}
 				--bottom;
 				dir = 4;
 			}
 			else if (dir == 4){		 // moving bottom->up -> mA[i][left]
 				for (int i = bottom; i >= top; --i)
-					if (this->threatened(this->_mapArray[i][left]))
+					if (threatened(this->_mapArray[i][left])){
 						closest = this->_mapArray[i][left];
+						std::cout << "MESSAGE Threatened " << left << ' ' << i << " = true;";
+						std::cerr << "THREAT" << std::endl;
+					}
+				++left;
+				dir = 1;
+			}
+		}
+		if (closest.get_pos().x == -1)
+		{
+			std::cerr << closest.get_pos().x << ' ' << closest.get_pos().y << std::endl;
+			throw (std::exception());
+		}
+		return (closest);
+	}
+	Position	firstAllied(void) const {	//	FROM MIDDLE SPIRAL
+		int top = 0, bottom = this->_height - 1, left = 0, right = this->_width - 1, dir = 1;
+		Position	closest;
+		while (top <= bottom && left <= right){
+			if (dir == 1){			// moving left->right -> mA[top][i]
+				for (int i = left; i <= right; ++i)
+					if (this->_mapArray[top][i].get_owner() == 1 && this->_mapArray[top][i].get_units() > 0){
+						closest = this->_mapArray[top][i];
+					}
+				++top;
+				dir = 2;
+			}
+			else if (dir == 2){		// moving top->bottom -> mA[i][right]
+				for (int i = top; i <= bottom; ++i)
+					if (this->_mapArray[i][right].get_owner() == 1 && this->_mapArray[i][right].get_units() > 0){
+						closest = this->_mapArray[i][right];
+					}
+				--right;
+				dir = 3;
+			}
+			else if (dir == 3){		 // moving right->left -> mA[bottom][i]
+				for (int i = right; i >= left; --i)
+					if (this->_mapArray[bottom][i].get_owner() == 1 && this->_mapArray[bottom][i].get_units() > 0){
+						closest = this->_mapArray[bottom][i];
+					}
+				--bottom;
+				dir = 4;
+			}
+			else if (dir == 4){		 // moving bottom->up -> mA[i][left]
+				for (int i = bottom; i >= top; --i)
+					if (this->_mapArray[i][left].get_owner() == 1 && this->_mapArray[i][left].get_units() > 0){
+						closest = this->_mapArray[i][left];
+					}
 				++left;
 				dir = 1;
 			}
@@ -301,51 +349,79 @@ up:
 		return (closest);
 	}
 	Position	move(Position pos) const {
-		if (!pos.get_units())
-			throw (std::exception());
 		if (round < 4)
 			return (this->startDirection(pos));
-		try{
-			return (this->closestNotOwned(pos));
+		try {
+			return (this->closestOppOwned(pos));
 		} catch (std::exception &e){
-			/* go safe */
+			try {
+				return (this->closestNotOwned(pos));
+			} catch (std::exception &e){
+				std::cerr << "No move found" << std::endl;
+				throw ;
+			}
 		}
 
 	}
+	Position	closestOppOwned(Position const &pos) const {
+		coord	check;
+		int		i = 0;
+		while (	pos.get_pos().x + i < this->_width ||
+				pos.get_pos().x - i >= 0 ||
+				pos.get_pos().y + i < this->_height ||
+				pos.get_pos().y - i >= 0){
+			if (pos.get_pos().x + i < this->_width){
+				check = {pos.get_pos().x + i,pos.get_pos().y};
+				if (this->coordToPos(check).get_owner() == 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().x - i >= 0){
+				check = {pos.get_pos().x - i,pos.get_pos().y};
+				if (this->coordToPos(check).get_owner() == 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().y + i < this->_height){
+				check = {pos.get_pos().x,pos.get_pos().y + i};
+				if (this->coordToPos(check).get_owner() == 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().y - i >= 0){
+				check = {pos.get_pos().x,pos.get_pos().y - i};
+				if (this->coordToPos(check).get_owner() == 0)
+					return (this->coordToPos(check));
+			}
+			++i;
+		}
+		throw (std::exception());
+	}
 	Position	closestNotOwned(Position const &pos) const {
-		static int	dir = 0;
-		coord		check;
-		if (dir == 1)
-			goto down;
-		else if (dir == 2)
-			goto left;
-		else if (dir == 3)
-			goto up;
-		else
-			goto right;
-right:
-		check = {pos.get_pos().x + 1,pos.get_pos().y};
-		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
-			dir = 1;
-			return (this->coordToPos(check));
-		}
-down:
-		check = {pos.get_pos().x,pos.get_pos().y + 1};
-		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
-			dir = 2;
-			return (this->coordToPos(check));
-		}
-left:
-		check = {pos.get_pos().x - 1,pos.get_pos().y};
-		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
-			dir = 3;
-			return (this->coordToPos(check));
-		}
-up:
-		check = {pos.get_pos().x,pos.get_pos().y - 1};
-		if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0){
-			dir = 0;
-			return (this->coordToPos(check));
+		coord	check;
+		int		i = 0;
+		while (	pos.get_pos().x + i < this->_width ||
+				pos.get_pos().x - i >= 0 ||
+				pos.get_pos().y + i < this->_height ||
+				pos.get_pos().y - i >= 0){
+			if (pos.get_pos().x + i < this->_width){
+				check = {pos.get_pos().x + i,pos.get_pos().y};
+				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().x - i >= 0){
+				check = {pos.get_pos().x - i,pos.get_pos().y};
+				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().y + i < this->_height){
+				check = {pos.get_pos().x,pos.get_pos().y + i};
+				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+					return (this->coordToPos(check));
+			}
+			if (pos.get_pos().y - i >= 0){
+				check = {pos.get_pos().x,pos.get_pos().y - i};
+				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+					return (this->coordToPos(check));
+			}
+			++i;
 		}
 		throw (std::exception());
 	}
@@ -460,9 +536,9 @@ up:
 		std::map<std::string, coord>	areaToSameOppositePos	{{"top-left",BL},{"top",B},{"top-right",BR},
 																{"left",BL},{"center",CTR},{"right",TR},
 																{"bottom-left",TL},{"bottom",T},{"bottom-right",TR}};
-		std::cerr << "startDirection(" << pos.get_pos() << ") = " << this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]).get_pos() << std::endl;
+		// std::cerr << "startDirection(" << pos.get_pos() << ") = " << this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]).get_pos() << std::endl;
 		state = !state;
-		return (this->coordToPos(areaToOppositePos[this->area(pos)]));
+		return (this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]));
 	}
 };
 
@@ -514,31 +590,29 @@ public:
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
-		try {
-			std::cerr << "BUILD " << this->_map->inDanger() << ';';
-		} catch (std::exception &e){
-			if (!(round % 4)){
+			if (!(round % 3) && this->_matter < 50){
 				try {
 					std::cout << "BUILD " << this->_map->closeMiddleCanBuild().get_pos() << ';';
 				} catch (std::exception &e){std::cerr << "Player::build() : Error";}
 			}
-		}
 	}
 	void	move(void) const {
 		for (int i = 0; i < this->_map->get_height(); ++i){
 			for (int j = 0; j < this->_map->get_width(); ++j){
-				try {
-					this->_map->move(this->_map->get_mapArray()[i][j]);
-					std::cout << "MOVE " << this->_map->get_mapArray()[i][j].get_units() << ' ' << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
-				} catch (std::exception &e){}
+				if (this->_map->get_mapArray()[i][j].get_owner() == 1 && this->_map->get_mapArray()[i][j].get_units() > 0)
+					try {
+						this->_map->move(this->_map->get_mapArray()[i][j]);
+						std::cout << "MOVE " << this->_map->get_mapArray()[i][j].get_units() / 2 + 1 << ' ' << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
+					} catch (std::exception &e){}
 			}
 		}
 	}
 	void	spawn(void) const {
-		if (round % 2){
-			try {
-				std::cout << "SPAWN 1 " << this->_map->closeMiddleCanSpawn().get_pos() << ';';
-			} catch (std::exception &e){std::cerr << "Player::spawn() : Error";}
+		try {
+			this->_map->firstAllied();
+			std::cout << "SPAWN " << this->_matter / 10 << ' ' << this->_map->firstAllied().get_pos() << ';';
+		} catch (std::exception &e) {
+			std::cerr << "No Allied found" << std::endl;
 		}
 	}
 };
@@ -568,7 +642,9 @@ int main(void){
 		myself.set_matter(my_matter);
 		cmap.set_mapArray();
 
-		myself.build();
+		std::cout << "MESSAGE round = " << round << ';';
+
+		// myself.build();
 		myself.move();
 		myself.spawn();
 		std::cout << std::endl;
