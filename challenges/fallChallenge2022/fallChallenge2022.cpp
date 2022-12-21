@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
-/*   Updated: 2022/12/21 04:21:28 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/12/21 05:20:49 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <cstdlib>
 
 unsigned int	round = 0;
 
@@ -32,6 +33,9 @@ struct coord {
 	}
 	bool	operator==(const coord pos) const {
 		(this->x == pos.x && this->y == pos.y) ? true : false;
+	}
+	int		distance(const coord pos) const {
+		return (abs(this->x - pos.x) + abs(this->y - pos.y));
 	}
 };
 std::ostream	&operator<<(std::ostream &os, const coord &pos){
@@ -352,16 +356,12 @@ public:
 		if (round < 4)
 			return (this->startDirection(pos));
 		try {
-			return (this->closestOppOwned(pos));
+			Position	a = this->closestNotOwned(pos);
+			Position	b = this->closestOppOwned(pos);
+			return (a.get_pos().distance(pos.get_pos()) < b.get_pos().distance(pos.get_pos()) ? a : b);
 		} catch (std::exception &e){
-			try {
-				return (this->closestNotOwned(pos));
-			} catch (std::exception &e){
-				std::cerr << "No move found" << std::endl;
-				throw ;
-			}
+			return (this->firstCanSpawn());
 		}
-
 	}
 	Position	closestOppOwned(Position const &pos) const {
 		coord	check;
@@ -540,6 +540,32 @@ public:
 		state = !state;
 		return (this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]));
 	}
+	Position	sacrifice(void) const {
+		int	countMax = 0;
+		Position	tmp;
+		for (int i = 0; i < this->_height; ++i){
+			for (int j = 0; j < this->_width; ++j){
+				if (this->_mapArray[i][j].get_owner() != 1 || this->_mapArray[i][j].get_inRangeOfRecycler())
+					continue ;
+				int	count;
+				if (i + 1 < this->_height && this->_mapArray[i + 1][j].get_owner() == 0)
+					++count;
+				if (i - 1 >= 0 && this->_mapArray[i - 1][j].get_owner() == 0)
+					++count;
+				if (j + 1 < this->_width && this->_mapArray[i][j + 1].get_owner() == 0)
+					++count;
+				if (i - 1 >= 0 && this->_mapArray[i][j - 1].get_owner() == 0)
+					++count;
+				if (count > countMax && count > 2){
+					countMax = count;
+					tmp = this->_mapArray[i][j];
+				}
+			}
+		}
+		if (countMax == 0)
+			throw (std::exception());
+		return (tmp);
+	}
 };
 
 /* class FifthMap : public Map {
@@ -590,11 +616,12 @@ public:
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
-			if (!(round % 3) && this->_matter < 50){
-				try {
-					std::cout << "BUILD " << this->_map->closeMiddleCanBuild().get_pos() << ';';
-				} catch (std::exception &e){std::cerr << "Player::build() : Error";}
-			}
+		try {
+			this->_map->sacrifice();
+			std::cout << "BUILD " << this->_map->sacrifice().get_pos() << ';';
+		} catch (std::exception &e){
+			std::cerr << "no build found" << std::endl;
+		}
 	}
 	void	move(void) const {
 		for (int i = 0; i < this->_map->get_height(); ++i){
@@ -644,7 +671,7 @@ int main(void){
 
 		std::cout << "MESSAGE round = " << round << ';';
 
-		// myself.build();
+		myself.build();
 		myself.move();
 		myself.spawn();
 		std::cout << std::endl;
