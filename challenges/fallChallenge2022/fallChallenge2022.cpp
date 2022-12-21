@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
-/*   Updated: 2022/12/21 05:20:49 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/12/21 06:51:41 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,7 +228,7 @@ public:
 		return (closest);
 	}
 	bool		threatened(Position const &pos) const {
-		std::cerr << pos << " looks for threat" << std::endl;
+		// std::cerr << pos << " looks for threat" << std::endl;
 		coord	check = {pos.get_pos().x + 1,pos.get_pos().y};
 		if (!this->coordToPos(check).get_owner() && this->coordToPos(check).get_units() > 0)
 			return (true);
@@ -353,14 +353,19 @@ public:
 		return (closest);
 	}
 	Position	move(Position pos) const {
-		if (round < 4)
+		if (round < 4 * this->_width / 10)
 			return (this->startDirection(pos));
 		try {
 			Position	a = this->closestNotOwned(pos);
 			Position	b = this->closestOppOwned(pos);
 			return (a.get_pos().distance(pos.get_pos()) < b.get_pos().distance(pos.get_pos()) ? a : b);
 		} catch (std::exception &e){
-			return (this->firstCanSpawn());
+			std::cerr << "default move sent" << std::endl;
+			try {
+				return (this->firstCanSpawn());
+			} catch (std::exception &e){
+				std::cerr << "!!! NO MOVE POSSIBLE !!!" << std::endl;
+			}
 		}
 	}
 	Position	closestOppOwned(Position const &pos) const {
@@ -428,7 +433,7 @@ public:
 	Position	firstCanSpawn(void) const {
 		for (int i = 0; i < this->_height; ++i)
 			for (int j = 0; j < this->_width; ++j)
-				if (this->_mapArray[i][j].get_canspawn())
+				if (this->_mapArray[i][j].get_canspawn() && this->_mapArray[i][j].get_inRangeOfRecycler() == false)
 					return (this->_mapArray[i][j]);
 		throw (std::exception());
 	}
@@ -541,22 +546,35 @@ public:
 		return (this->coordToPos((state ? areaToOppositePos : areaToSameOppositePos)[this->area(pos)]));
 	}
 	Position	sacrifice(void) const {
-		int	countMax = 0;
+		int			countMax = 0;
+		bool		opp = false;
 		Position	tmp;
 		for (int i = 0; i < this->_height; ++i){
 			for (int j = 0; j < this->_width; ++j){
-				if (this->_mapArray[i][j].get_owner() != 1 || this->_mapArray[i][j].get_inRangeOfRecycler())
+				if (this->_mapArray[i][j].get_owner() != 1 || this->_mapArray[i][j].get_inRangeOfRecycler() || this->_mapArray[i][j].get_units() > 0)
 					continue ;
-				int	count;
-				if (i + 1 < this->_height && this->_mapArray[i + 1][j].get_owner() == 0)
+				int	count = 0;
+				if (i + 1 < this->_height && (this->_mapArray[i + 1][j].get_owner() == 0 || (this->_mapArray[i + 1][j].get_owner() == -1 && this->_mapArray[i + 1][j].get_scrapAmount() == 0))){
 					++count;
-				if (i - 1 >= 0 && this->_mapArray[i - 1][j].get_owner() == 0)
+					if (this->_mapArray[i + 1][j].get_owner() == 0)
+						opp = true;
+				}
+				if (i - 1 >= 0 && (this->_mapArray[i - 1][j].get_owner() == 0 || (this->_mapArray[i - 1][j].get_owner() == -1 && this->_mapArray[i - 1][j].get_scrapAmount() == 0))){
 					++count;
-				if (j + 1 < this->_width && this->_mapArray[i][j + 1].get_owner() == 0)
+					if (this->_mapArray[i - 1][j].get_owner() == 0)
+						opp = true;
+				}
+				if (j + 1 < this->_width && (this->_mapArray[i][j + 1].get_owner() == 0 || (this->_mapArray[i][j + 1].get_owner() == -1 && this->_mapArray[i][j + 1].get_scrapAmount() == 0))){
 					++count;
-				if (i - 1 >= 0 && this->_mapArray[i][j - 1].get_owner() == 0)
+					if (this->_mapArray[i][j + 1].get_owner() == 0)
+						opp = true;
+				}
+				if (i - 1 >= 0 && (this->_mapArray[i][j - 1].get_owner() == 0 || (this->_mapArray[i][j - 1].get_owner() == -1 && this->_mapArray[i][j - 1].get_scrapAmount() == 0))){
 					++count;
-				if (count > countMax && count > 2){
+					if (this->_mapArray[i][j - 1].get_owner() == 0)
+						opp = true;
+				}
+				if (count > countMax && count > 1 && opp){
 					countMax = count;
 					tmp = this->_mapArray[i][j];
 				}
@@ -616,11 +634,18 @@ public:
 	void	set_matter(int matter){this->_matter = matter;}
 	int		get_matter(void) const {return (this->_matter);}
 	void	build(void) const {
+		if (round % 3)
+			return ;
 		try {
 			this->_map->sacrifice();
 			std::cout << "BUILD " << this->_map->sacrifice().get_pos() << ';';
 		} catch (std::exception &e){
-			std::cerr << "no build found" << std::endl;
+			// try {
+			// 	this->_map->inDanger();
+			// 	std::cout << "BUILD " << this->_map->inDanger().get_pos() << ';';
+			// } catch (std::exception &e){
+			// 	std::cerr << "no build found" << std::endl;
+			// }
 		}
 	}
 	void	move(void) const {
@@ -629,17 +654,20 @@ public:
 				if (this->_map->get_mapArray()[i][j].get_owner() == 1 && this->_map->get_mapArray()[i][j].get_units() > 0)
 					try {
 						this->_map->move(this->_map->get_mapArray()[i][j]);
-						std::cout << "MOVE " << this->_map->get_mapArray()[i][j].get_units() / 2 + 1 << ' ' << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
+						for (int robots = this->_map->get_mapArray()[i][j].get_units(); robots > 0; --robots)
+							std::cout << "MOVE 1 " << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
 					} catch (std::exception &e){}
 			}
 		}
 	}
 	void	spawn(void) const {
+		if (this->_matter - 10 < 10)
+			return ;
 		try {
 			this->_map->firstAllied();
-			std::cout << "SPAWN " << this->_matter / 10 << ' ' << this->_map->firstAllied().get_pos() << ';';
+			std::cout << "SPAWN " << (this->_matter - 10) / 10 << ' ' << this->_map->firstAllied().get_pos() << ';';
 		} catch (std::exception &e) {
-			std::cerr << "No Allied found" << std::endl;
+			std::cout << "SPAWN " << (this->_matter - 10) / 10 << ' ' << this->_map->firstCanSpawn().get_pos() << ';';
 		}
 	}
 };
