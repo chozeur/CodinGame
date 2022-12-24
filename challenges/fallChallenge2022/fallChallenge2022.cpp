@@ -6,7 +6,7 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
-/*   Updated: 2022/12/21 06:51:41 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/12/24 06:43:54 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -547,34 +547,34 @@ public:
 	}
 	Position	sacrifice(void) const {
 		int			countMax = 0;
-		bool		opp = false;
+		// bool		opp = false;
 		Position	tmp;
 		for (int i = 0; i < this->_height; ++i){
 			for (int j = 0; j < this->_width; ++j){
 				if (this->_mapArray[i][j].get_owner() != 1 || this->_mapArray[i][j].get_inRangeOfRecycler() || this->_mapArray[i][j].get_units() > 0)
 					continue ;
 				int	count = 0;
-				if (i + 1 < this->_height && (this->_mapArray[i + 1][j].get_owner() == 0 || (this->_mapArray[i + 1][j].get_owner() == -1 && this->_mapArray[i + 1][j].get_scrapAmount() == 0))){
-					++count;
+				if (i + 1 < this->_height && (this->_mapArray[i + 1][j].get_owner() == 0 || this->_mapArray[i + 1][j].get_owner() == -1) && this->_mapArray[i + 1][j].get_scrapAmount() > 0){
 					if (this->_mapArray[i + 1][j].get_owner() == 0)
-						opp = true;
+						++count;
+						// opp = true;
 				}
-				if (i - 1 >= 0 && (this->_mapArray[i - 1][j].get_owner() == 0 || (this->_mapArray[i - 1][j].get_owner() == -1 && this->_mapArray[i - 1][j].get_scrapAmount() == 0))){
-					++count;
+				if (i - 1 >= 0 && (this->_mapArray[i - 1][j].get_owner() == 0 || this->_mapArray[i - 1][j].get_owner() == -1) && this->_mapArray[i - 1][j].get_scrapAmount() > 0){
 					if (this->_mapArray[i - 1][j].get_owner() == 0)
-						opp = true;
+						++count;
+						// opp = true;
 				}
-				if (j + 1 < this->_width && (this->_mapArray[i][j + 1].get_owner() == 0 || (this->_mapArray[i][j + 1].get_owner() == -1 && this->_mapArray[i][j + 1].get_scrapAmount() == 0))){
-					++count;
+				if (j + 1 < this->_width && (this->_mapArray[i][j + 1].get_owner() == 0 || this->_mapArray[i][j + 1].get_owner() == -1) && this->_mapArray[i][j + 1].get_scrapAmount() > 0){
 					if (this->_mapArray[i][j + 1].get_owner() == 0)
-						opp = true;
+						++count;
+						// opp = true;
 				}
-				if (i - 1 >= 0 && (this->_mapArray[i][j - 1].get_owner() == 0 || (this->_mapArray[i][j - 1].get_owner() == -1 && this->_mapArray[i][j - 1].get_scrapAmount() == 0))){
-					++count;
+				if (i - 1 >= 0 && (this->_mapArray[i][j - 1].get_owner() == 0 || this->_mapArray[i][j - 1].get_owner() == -1) && this->_mapArray[i][j - 1].get_scrapAmount() > 0){
 					if (this->_mapArray[i][j - 1].get_owner() == 0)
-						opp = true;
+						++count;
+						// opp = true;
 				}
-				if (count > countMax && count > 1 && opp){
+				if (count > countMax && count > 1){
 					countMax = count;
 					tmp = this->_mapArray[i][j];
 				}
