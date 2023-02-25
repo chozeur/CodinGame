@@ -6,9 +6,13 @@
 /*   By: flcarval <flcarval@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/18 04:46:08 by flcarval          #+#    #+#             */
-/*   Updated: 2022/12/24 06:43:54 by flcarval         ###   ########.fr       */
+/*   Updated: 2022/12/25 06:22:33 by flcarval         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+/* todo
+	move should return a position vector, so that the bots go more dispersed
+*/
 
 #include <iostream>
 #include <string>
@@ -408,22 +412,22 @@ public:
 				pos.get_pos().y - i >= 0){
 			if (pos.get_pos().x + i < this->_width){
 				check = {pos.get_pos().x + i,pos.get_pos().y};
-				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+				if ((this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 0) || (this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 3))
 					return (this->coordToPos(check));
 			}
 			if (pos.get_pos().x - i >= 0){
 				check = {pos.get_pos().x - i,pos.get_pos().y};
-				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+				if ((this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 0) || (this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 3))
 					return (this->coordToPos(check));
 			}
 			if (pos.get_pos().y + i < this->_height){
 				check = {pos.get_pos().x,pos.get_pos().y + i};
-				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+				if ((this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 0) || (this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 3))
 					return (this->coordToPos(check));
 			}
 			if (pos.get_pos().y - i >= 0){
 				check = {pos.get_pos().x,pos.get_pos().y - i};
-				if (this->coordToPos(check).get_owner() != 1 && this->coordToPos(check).get_scrapAmount() > 0)
+				if ((this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 0) || (this->coordToPos(check).get_owner() == 0 && this->coordToPos(check).get_scrapAmount() > 3))
 					return (this->coordToPos(check));
 			}
 			++i;
@@ -651,12 +655,13 @@ public:
 	void	move(void) const {
 		for (int i = 0; i < this->_map->get_height(); ++i){
 			for (int j = 0; j < this->_map->get_width(); ++j){
-				if (this->_map->get_mapArray()[i][j].get_owner() == 1 && this->_map->get_mapArray()[i][j].get_units() > 0)
+				if (this->_map->get_mapArray()[i][j].get_owner() == 1 && this->_map->get_mapArray()[i][j].get_units() > 0){
 					try {
 						this->_map->move(this->_map->get_mapArray()[i][j]);
 						for (int robots = this->_map->get_mapArray()[i][j].get_units(); robots > 0; --robots)
 							std::cout << "MOVE 1 " << j << ' ' << i << ' ' << this->_map->move(this->_map->get_mapArray()[i][j]).get_pos() << ';';
 					} catch (std::exception &e){}
+				}
 			}
 		}
 	}
