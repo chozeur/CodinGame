@@ -254,6 +254,10 @@ int main()
 			valid_cells[i] = Cell(row, col, board.getCell(row, col).getOwner());
 		}
 
+/* PLAY RANDOM CELL */
+		int	rand_cell = rand() % valid_cells.size();
+		board.meTakeCell(valid_cells[rand_cell].getPos().x, valid_cells[rand_cell].getPos().y);
+		cout << valid_cells[rand_cell].getPos().x << " " << valid_cells[rand_cell].getPos().y << endl;
 
 	}
 }
