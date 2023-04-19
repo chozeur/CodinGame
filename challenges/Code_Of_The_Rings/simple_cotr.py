@@ -69,7 +69,7 @@ def lowestCost(costs :dict):
     return res
 
 def move(spell, forest, bpos, movepos, letter):
-    print(f'letter = {letter}', file=sys.stderr)
+    # print(f'letter = {letter}', file=sys.stderr)
     if movepos > bpos:
         for i in range(movepos - bpos):
             spell += '>'
@@ -79,9 +79,9 @@ def move(spell, forest, bpos, movepos, letter):
             spell += '<'
             bpos -= 1
 
-    print(f'forest[{movepos}] = "{forest[movepos]}"', file=sys.stderr)
+    # print(f'forest[{movepos}] = "{forest[movepos]}"', file=sys.stderr)
     m = morp(forest, movepos, letter)
-    print(f'morp = {m}', file=sys.stderr)
+    # print(f'morp = {m}', file=sys.stderr)
     if m == 'p':
         while forest[movepos] != letter:
             spell += '+'
@@ -108,6 +108,6 @@ while i != len(magic_phrase):
     costs = costOfAll(forest, bpos, magic_phrase[i])
     movepos = lowestCost(costs)
     spell, forest, bpos = move(spell, forest, bpos, movepos, magic_phrase[i])
-    print(f'spell = {spell}\n\nforest = {forest}\n\nbpos = {bpos}\n\nmovepos = {movepos}\n\n', file=sys.stderr)
+    # print(f'spell = {spell}\n\nforest = {forest}\n\nbpos = {bpos}\n\nmovepos = {movepos}\n\n', file=sys.stderr)
     i+=1
 print(spell)
